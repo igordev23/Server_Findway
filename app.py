@@ -45,6 +45,11 @@ def get_gps():
 def pagina_inicial():
     return render_template("index.html")
 
+@app.route("/")
+def index():
+    google_maps_api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
+    return render_template("index.html", google_maps_api_key=google_maps_api_key)
+
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=PORT)
