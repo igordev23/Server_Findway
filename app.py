@@ -42,10 +42,6 @@ def get_gps():
     return jsonify(gps_data)
 
 @app.route("/", methods=["GET"])
-def pagina_inicial():
-    return render_template("index.html")
-
-@app.route("/")
 def index():
     google_maps_api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
     return render_template("index.html", google_maps_api_key=google_maps_api_key)
