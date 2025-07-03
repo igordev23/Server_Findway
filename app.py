@@ -15,6 +15,11 @@ with app.app_context():
     for rule in app.url_map.iter_rules():
         print(rule)
 
+
+with app.app_context():
+    db.drop_all()
+    db.create_all()
+
 @app.route("/")
 def index():
     return render_template("index.html", google_maps_api_key=app.config["GOOGLE_MAPS_API_KEY"])
