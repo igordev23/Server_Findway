@@ -2,7 +2,7 @@ async function carregarHistoricoGPS() {
   try {
     const response = await fetch("/gps/historico");
     if (!response.ok) throw new Error("Erro na requisição");
-    
+
     const dados = await response.json();
     const tabela = document.getElementById("tabela-historico");
     tabela.innerHTML = "";
@@ -12,10 +12,20 @@ async function carregarHistoricoGPS() {
       return;
     }
 
+    const formatadorData = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      dateStyle: "short"
+    });
+
+    const formatadorHora = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      timeStyle: "medium"
+    });
+
     dados.forEach((item) => {
       const timestamp = new Date(item.timestamp);
-      const data = timestamp.toLocaleDateString("pt-BR");
-      const hora = timestamp.toLocaleTimeString("pt-BR");
+      const data = formatadorData.format(timestamp);
+      const hora = formatadorHora.format(timestamp);
 
       const linha = document.createElement("tr");
       linha.innerHTML = `
