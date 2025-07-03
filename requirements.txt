@@ -4,3 +4,4 @@ flask_talisman
 psycopg2-binary
 python-dotenv
 Flask-SQLAlchemy
+config
