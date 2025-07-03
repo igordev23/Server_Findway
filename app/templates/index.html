@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FindWay - Monitoramento</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body class="bg-light">
+  <div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+      <h2 class="text-primary"><i class="bi bi-geo-alt-fill me-2"></i>FindWay</h2>
+      <div>
+        <span class="fw-bold">Veículo:</span> ABC-1234<br />
+        <span class="fw-bold">Status:</span>
+        <span class="text-success">Online <i class="bi bi-circle-fill"></i></span>
+      </div>
+    </div>
+
+    <!-- Botão para abrir Histórico em nova aba -->
+    <div class="d-flex justify-content-end mb-3">
+      <a href="/historico" class="btn btn-primary">
+        <i class="bi bi-clock-history me-1"></i> Abrir Histórico (Últimas 24h)
+      </a>
+    </div>
+
+    <!-- Mapa e dados em tempo real -->
+    <div class="row mb-4">
+      <div class="col-lg-8 mb-3">
+        <div class="card h-100">
+          <div class="card-header bg-primary text-white">
+            <i class="bi bi-map-fill me-1"></i> Localização Atual
+          </div>
+          <div class="card-body p-0">
+            <div id="map" style="height: 400px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header bg-secondary text-white">
+            <i class="bi bi-speedometer2 me-1"></i> Dados em Tempo Real
+          </div>
+          <div class="card-body">
+            <p><i class="bi bi-geo-alt"></i> Latitude: <span id="lat">--</span></p>
+            <p><i class="bi bi-geo"></i> Longitude: <span id="lng">--</span></p>
+            <p><i class="bi bi-clock-history"></i> Atualizado: <span id="ultima-atualizacao">--</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS e Google Maps -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
+</body>
+
+</html>
