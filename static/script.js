@@ -1,4 +1,4 @@
-let map, lastLocation = null, markers = [], pathPolyline;
+let map, marker;
 
 window.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("map")) {
@@ -42,53 +42,21 @@ async function initMap() {
     zoom: 17,
   });
 
-  // Adicionar o primeiro marcador e inicializar a polilinha
-  addMarker(location);
-  initPolyline(location);
-
-  setInterval(async () => {
-    const newLocation = await getGPSData();
-    if (newLocation) {
-      // Se a posição for diferente da última, adiciona no mapa e atualiza a linha
-      if (
-        !lastLocation ||
-        newLocation.lat !== lastLocation.lat ||
-        newLocation.lng !== lastLocation.lng
-      ) {
-        addMarker(newLocation);
-        updatePolyline(newLocation);
-        map.setCenter(newLocation);
-        lastLocation = newLocation;
-      }
-    }
-  }, 3000);
-}
-
-function addMarker(location) {
-  const marker = new google.maps.Marker({
+  marker = new google.maps.Marker({
     position: location,
     map,
-    title: `Lat: ${location.lat}, Lng: ${location.lng}`,
+    title: "Localização Atual",
     icon: {
       url: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
       scaledSize: new google.maps.Size(40, 40)
     }
   });
-  markers.push(marker);
-}
 
-function initPolyline(startLocation) {
-  pathPolyline = new google.maps.Polyline({
-    path: [startLocation],
-    geodesic: true,
-    strokeColor: "#FF0000",
-    strokeOpacity: 1.0,
-    strokeWeight: 3,
-    map: map,
-  });
-}
-
-function updatePolyline(newLocation) {
-  const path = pathPolyline.getPath();
-  path.push(new google.maps.LatLng(newLocation.lat, newLocation.lng));
+  setInterval(async () => {
+    const newLocation = await getGPSData();
+    if (newLocation) {
+      marker.setPosition(newLocation);
+      map.setCenter(newLocation);
+    }
+  }, 3000);
 }
