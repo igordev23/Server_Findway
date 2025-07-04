@@ -13,17 +13,23 @@
 <body class="bg-light">
   <div class="container py-4">
      <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-      <h2 class="text-primary"><i class="bi bi-geo-alt-fill me-2"></i>FindWay</h2>
-      <div>
-        <span class="fw-bold">Veículo:</span> ABC-1234<br />
-        <span class="fw-bold">Status:</span>
-        <span class="text-success">Online <i class="bi bi-circle-fill"></i></span>
+       <h2 class="text-primary"><i class="bi bi-geo-alt-fill me-2"></i>FindWay</h2>
+       <div>
+         <span class="fw-bold">Veículo:</span> ABC-1234<br />
+         <span class="fw-bold">Status:</span>
+         <span class="text-success">Online <i class="bi bi-circle-fill"></i></span>
+        </div>
       </div>
-    </div>
+      
+      <h3 class="text-primary mb-3"><i class="bi bi-clock-history me-2"></i>Histórico das Últimas 24h</h3>
+      
+      <div class="mt-4 mb-4">
+        <a href="/" class="btn btn-secondary">
+          <i class="bi bi-arrow-left me-1"></i> Voltar para Mapa
+        </a>
+      </div>
 
-<h3 class="text-primary mb-3"><i class="bi bi-clock-history me-2"></i>Histórico das Últimas 24h</h3>
-
-    <div class="card">
+      <div class="card">
       <div class="card-body">
         <table class="table table-striped">
             <thead>
@@ -40,13 +46,9 @@
                 </tr>
             </tbody>
             </table>
-
       </div>
     </div>
-
-    <div class="mt-4">
-      <a href="/" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Voltar para Mapa</a>
-    </div>
+    
   </div>
 
   <script src="{{ url_for('static', filename='historico.js') }}"></script>
