@@ -1,2 +1,17 @@
 #Ignorar .env
 .env
+#Ignorar arquivos de cache do Python
+__pycache__/
+*.pyc
+#Ignorar arquivos de configuração do IDE
+.vscode/
+.idea/
+#Ignorar arquivos de log
+*.log
+#Ignorar arquivos temporários
+*.tmp
+#Ignorar diretórios de build
+build/
+dist/
+#Ignorar node modules
+node_modules/

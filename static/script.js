@@ -1,11 +1,5 @@
 let map, marker;
 
-window.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("map")) {
-    initMap();
-  }
-});
-
 async function getGPSData() {
   try {
     const response = await fetch("/gps");
