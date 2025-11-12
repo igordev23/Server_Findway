@@ -1,9 +1,10 @@
 from database import db
+from .usuario import Usuario
 
-class Cliente(db.Model):
+class Cliente(Usuario):
     __tablename__ = "Cliente"
 
-    id = db.Column(db.BigInteger, primary_key=True, unique=True)
+    id = db.Column(db.BigInteger, db.ForeignKey("Usuario.id"), primary_key=True)
     administrador_id = db.Column(db.BigInteger, db.ForeignKey("Administrador.id"), nullable=False)
     rua = db.Column(db.String(255), nullable=False)
     cidade = db.Column(db.String(255), nullable=False)
@@ -11,8 +12,9 @@ class Cliente(db.Model):
     cep = db.Column(db.String(255), nullable=False)
     numero = db.Column(db.String(255), nullable=False)
 
-    # Relacionamento com veículos
-    veiculos = db.relationship("Veiculo", backref="cliente", lazy=True)
+    __mapper_args__ = {
+        "polymorphic_identity": "cliente",
+    }
 
     def __repr__(self):
-        return f"<Cliente {self.id} - {self.cidade}/{self.estado}>"
+        return f"<Cliente {self.nome} - {self.cidade}/{self.estado}>"
