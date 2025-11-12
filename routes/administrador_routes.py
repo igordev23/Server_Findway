@@ -1,27 +1,86 @@
 from flask import Blueprint, request, jsonify
 from database import db
 from models.administrador import Administrador
+from datetime import datetime
+import pytz
+import firebase_admin
+from firebase_admin import credentials, auth
+import os
 
 administrador_bp = Blueprint("administrador_bp", __name__)
+br_tz = pytz.timezone("America/Sao_Paulo")
+
+if not firebase_admin._apps:
+    cred_path = os.getenv("FIREBASE_CREDENTIALS")
+    if cred_path and os.path.exists(cred_path):
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred)
+    else:
+        raise RuntimeError("Credenciais Firebase não encontradas. Configure FIREBASE_CREDENTIALS no .env")
 
 @administrador_bp.route("/administradores", methods=["GET"])
 def listar_administradores():
     administradores = Administrador.query.all()
-    return jsonify([{"id": a.id} for a in administradores])
+    return jsonify([
+        {
+            "id": a.id,
+            "nome": a.nome,
+            "email": a.email,
+            "telefone": a.telefone
+        } for a in administradores
+    ])
 
 @administrador_bp.route("/administradores/<int:id>", methods=["GET"])
 def obter_administrador(id):
     admin = Administrador.query.get(id)
     if not admin:
         return jsonify({"error": "Administrador não encontrado"}), 404
-    return jsonify({"id": admin.id})
+    return jsonify({
+        "id": admin.id,
+        "nome": admin.nome,
+        "email": admin.email,
+        "telefone": admin.telefone
+    })
 
 @administrador_bp.route("/administradores", methods=["POST"])
 def criar_administrador():
-    admin = Administrador()
-    db.session.add(admin)
-    db.session.commit()
-    return jsonify({"message": "Administrador criado", "id": admin.id}), 201
+    data = request.json
+    try:
+        nome = data["nome"]
+        email = data["email"]
+        senha = data["senha"]
+        telefone = data.get("telefone", "")
+
+        # Cria usuário no Firebase
+        firebase_user = auth.create_user(
+            email=email,
+            password=senha,
+            display_name=nome,
+            phone_number=None if telefone == "" else telefone
+        )
+
+        # Cria o administrador (herda de Usuario)
+        admin = Administrador(
+            nome=nome,
+            email=email,
+            telefone=telefone,
+            tipo_usuario="administrador",
+            firebase_uid=firebase_user.uid,
+            criado_em=datetime.now(br_tz)
+        )
+
+        db.session.add(admin)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Administrador criado com sucesso.",
+            "id": admin.id,
+            "firebase_uid": firebase_user.uid
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
 
 @administrador_bp.route("/administradores/<int:id>", methods=["DELETE"])
 def deletar_administrador(id):
