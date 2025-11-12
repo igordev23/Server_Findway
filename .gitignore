@@ -15,3 +15,5 @@ build/
 dist/
 #Ignorar node modules
 node_modules/
+
+serviceAccountKey.json
