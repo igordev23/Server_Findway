@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models.models import GPSData  # seu modelo GPS
+from models.localizacao import Localizacao  
 from database import db
 from datetime import datetime
 import re
@@ -29,7 +29,7 @@ def receber_mensagem():
     timestamp_brasilia = datetime.now(fuso_brasilia)
 
     # Criar entrada GPS
-    gps_entry = GPSData(latitude=lat, longitude=lng, timestamp=timestamp_brasilia)
+    gps_entry = Localizacao(latitude=lat, longitude=lng, timestamp=timestamp_brasilia)
     db.session.add(gps_entry)
     db.session.commit()
 
