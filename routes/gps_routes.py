@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models.models import GPSData
+from models.localizacao import Localizacao
 from database import db
 from datetime import datetime, timedelta, timezone
 
@@ -7,7 +7,7 @@ gps_bp = Blueprint('gps_bp', __name__)
 
 @gps_bp.route("/gps", methods=["GET"])
 def get_latest_gps():
-    latest = GPSData.query.order_by(GPSData.timestamp.desc()).first()
+    latest = Localizacao.query.order_by(Localizacao.timestamp.desc()).first()
     if latest:
         return jsonify(latest.to_dict())
     else:
@@ -24,12 +24,12 @@ def add_gps():
     except (TypeError, ValueError):
         return jsonify({"error": "Latitude e Longitude inválidos"}), 400
 
-    gps_entry = GPSData(nome=nome, latitude=lat, longitude=lon)
+    gps_entry = Localizacao(nome=nome, latitude=lat, longitude=lon)
     db.session.add(gps_entry)
     db.session.commit()
 
     cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
-    GPSData.query.filter(GPSData.timestamp < cutoff).delete()
+    Localizacao.query.filter(Localizacao.timestamp < cutoff).delete()
     db.session.commit()
     print(f"[LOG] GPS salvo: {gps_entry.latitude}, {gps_entry.longitude}, {gps_entry.timestamp}")
 
@@ -42,6 +42,6 @@ def historico_gps():
 
     # Define o tempo de corte (últimas 24h)
     cutoff = datetime.utcnow() - timedelta(hours=24)
-    dados = GPSData.query.filter(GPSData.timestamp >= cutoff).order_by(GPSData.timestamp.desc()).all()
+    dados = Localizacao.query.filter(Localizacao.timestamp >= cutoff).order_by(Localizacao.timestamp.desc()).all()
 
     return jsonify([d.to_dict() for d in dados])
