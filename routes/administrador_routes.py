@@ -1,9 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template, flash, redirect
 from database import db
 from models.administrador import Administrador
 from datetime import datetime
 import pytz
 import firebase_admin
+from models.cliente import Cliente
+from models.veiculo import Veiculo
 from firebase_admin import credentials, auth
 import os
 
@@ -90,3 +92,65 @@ def deletar_administrador(id):
     db.session.delete(admin)
     db.session.commit()
     return jsonify({"message": "Administrador removido"})
+
+
+@administrador_bp.route("/admin/cadastrar-cliente", methods=["GET", "POST"])
+def cadastrar_cliente():
+    if request.method == "POST":
+        data = request.form
+        novo_cliente = Cliente(
+            nome=data["nome"],
+            email=data["email"],
+            senha=data["senha"],
+            telefone=data.get("telefone"),
+            rua=data["rua"],
+            numero=data["numero"],
+            cidade=data["cidade"],
+            estado=data["estado"],
+            cep=data["cep"],
+            administrador_id=1  # Exemplo fixo — depois use o usuário logado
+        )
+        db.session.add(novo_cliente)
+        db.session.commit()
+        flash("Cliente cadastrado com sucesso!", "success")
+        return redirect("/admin/cadastrar-cliente")
+
+    firebase_config = {
+        "apiKey": os.getenv("FIREBASE_API_KEY"),
+        "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
+        "projectId": os.getenv("FIREBASE_PROJECT_ID"),
+        "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
+        "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
+        "appId": os.getenv("FIREBASE_APP_ID"),
+        "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID")
+    }
+    return render_template("admin/cadastrar_cliente.html", firebase_config=firebase_config)
+
+@administrador_bp.route("/admin/cadastrar-veiculo", methods=["GET", "POST"])
+def cadastrar_veiculo():
+    if request.method == "POST":
+        data = request.form
+        novo_veiculo = Veiculo(
+            cliente_id=data["cliente_id"],
+            placa=data["placa"],
+            modelo=data["modelo"],
+            marca=data["marca"],
+            ano=int(data["ano"]),
+            ativo=data["ativo"].lower() == "true"
+        )
+        db.session.add(novo_veiculo)
+        db.session.commit()
+        flash("Veículo cadastrado com sucesso!", "success")
+        return redirect("/admin/cadastrar-veiculo")
+
+    firebase_config = {
+        "apiKey": os.getenv("FIREBASE_API_KEY"),
+        "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
+        "projectId": os.getenv("FIREBASE_PROJECT_ID"),
+        "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
+        "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
+        "appId": os.getenv("FIREBASE_APP_ID"),
+        "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID")
+    }
+    return render_template("admin/cadastrar_veiculo.html", firebase_config=firebase_config)
+
