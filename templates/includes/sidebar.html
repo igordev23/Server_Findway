@@ -4,7 +4,8 @@
     <div class="sidebar-logo p-3">
       <div class="d-flex align-items-center justify-content-between">
         <a class="sidebar-link text-decoration-none d-flex align-items-center" href="/home">
-          <img src="{{ url_for('static', filename='assets/images/logo-findway.jpg') }}" alt="Logo" style="width: 35px; margin-right: 10px;">
+          <img src="{{ url_for('static', filename='assets/images/logo-findway.jpg') }}" alt="Logo"
+            style="width: 35px; margin-right: 10px;">
           <h5 class="m-0 text-white">Findway</h5>
         </a>
         <div class="mobile-toggle sidebar-toggle">
@@ -59,11 +60,28 @@
       </li>
 
       <!-- Administração (somente administradores) -->
-      <li class="nav-item">
-        <a class="sidebar-link" href="/admin">
-          <span class="icon-holder"><i class="ti-lock"></i></span>
-          <span class="title">Administração</span>
-        </a>  
+      <li class="nav-item mt-3">
+        <a class="sidebar-link d-flex align-items-center justify-content-between" data-bs-toggle="collapse"
+          href="#adminMenu" role="button" aria-expanded="false" aria-controls="adminMenu">
+          <div>
+            <span class="icon-holder"><i class="ti-lock"></i></span>
+            <span class="title">Administração</span>
+          </div>
+          <i class="bi bi-chevron-down small"></i>
+        </a>
+
+        <ul class="collapse list-unstyled ms-4" id="adminMenu">
+          <li>
+            <a href="/admin/cadastrar-cliente" class="sidebar-link d-block py-1">
+              <i class="bi bi-person-plus me-1"></i> Cadastrar Cliente
+            </a>
+          </li>
+          <li>
+            <a href="/admin/cadastrar-veiculo" class="sidebar-link d-block py-1">
+              <i class="bi bi-truck me-1"></i> Cadastrar Veículo
+            </a>
+          </li>
+        </ul>
       </li>
 
       <!-- Links úteis -->
