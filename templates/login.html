@@ -1,34 +1,57 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - FindWay</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% extends "layouts/base-authentication.html" %}
 
-  <!-- Firebase compatível (v8) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-</head>
+{% block title %}Login{% endblock title %}
 
-<body class="bg-light">
-  <div class="container mt-5">
-    <div class="card shadow p-4 mx-auto" style="max-width: 400px;">
-      <h3 class="text-center mb-3">Login - FindWay</h3>
-      <div class="mb-3">
-        <label for="email" class="form-label">E-mail</label>
-        <input type="email" class="form-control" id="email" placeholder="seuemail@exemplo.com">
-      </div>
-      <div class="mb-3">
-        <label for="senha" class="form-label">Senha</label>
-        <input type="password" class="form-control" id="senha" placeholder="Digite sua senha">
-      </div>
-      <button id="btnLogin" class="btn btn-primary w-100">Entrar</button>
-      <p class="text-center mt-3" id="erro" style="color: red;"></p>
-    </div>
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/login.css') }}">
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="login-container">
+
+  <!-- Lado esquerdo: logo -->
+  <div class="login-left">
+    <img src="{{ url_for('static', filename='assets/images/logo-findway.jpg') }}" alt="Logo FindWay">
   </div>
 
-  <script id="firebase-config" type="application/json">{{ firebase_config | tojson }}</script>
-  <script src="{{ url_for('static', filename='loginFirebase/login.js') }}"></script>
-</body>
-</html>
+  <!-- Lado direito: formulário -->
+  <div class="login-right">
+    <h3 class="fw-bold mb-4">Login</h3>
+
+    {% if msg %}
+      <p class="text-danger">{{ msg | safe }}</p>
+    {% else %}
+      <p class="text-muted">Digite seu e-mail e senha para acessar o sistema.</p>
+    {% endif %}
+
+    <form id="loginForm" method="POST" action="">
+      <div class="mb-3">
+        <input type="email" class="form-control" id="email" placeholder="Email" required>
+      </div>
+
+      <div class="mb-3">
+        <input type="password" class="form-control" id="senha" placeholder="Senha" required>
+      </div>
+
+      <button type="submit" id="btnLogin" class="btn btn-primary w-100 btn-loader">Entrar</button>
+
+      <div class="text-center text-muted mt-3">
+        <a href="#">Esqueceu sua senha?</a>
+      </div>
+      <p class="text-center mt-3 text-danger" id="erro"></p>
+    </form>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<!-- Firebase compatível (v8) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<!-- Configuração do Firebase (injetada pelo Flask) -->
+<script id="firebase-config" type="application/json">{{ firebase_config | tojson }}</script>
+
+<!-- Script JS específico da tela -->
+<script src="{{ url_for('static', filename='assets/js/loginFirebase/login.js') }}"></script>
+{% endblock javascripts %}
