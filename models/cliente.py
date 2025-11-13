@@ -1,9 +1,8 @@
 from database import db
-from .usuario import Usuario
+from models.usuario import Usuario
 
 class Cliente(Usuario):
     __tablename__ = "Cliente"
-
     id = db.Column(db.BigInteger, db.ForeignKey("Usuario.id"), primary_key=True)
     administrador_id = db.Column(db.BigInteger, db.ForeignKey("Administrador.id"), nullable=False)
     rua = db.Column(db.String(255), nullable=False)
@@ -17,4 +16,4 @@ class Cliente(Usuario):
     }
 
     def __repr__(self):
-        return f"<Cliente {self.nome} - {self.cidade}/{self.estado}>"
+        return f"<Cliente {self.id} - {self.cidade}/{self.estado}>"
