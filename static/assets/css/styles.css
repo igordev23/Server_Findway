@@ -1,0 +1,53 @@
+/* styles.css para o painel FindWay */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+.card {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+}
+
+.card-header {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+#map {
+  width: 100%;
+  height: 500px;
+  border-radius: 12px;
+}
+
+
+#lista-historico li {
+  font-size: 0.95rem;
+}
+
+#mensagens p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+h2 {
+  font-weight: 700;
+}
+
+.btn-outline-secondary {
+  border-radius: 20px;
+  padding: 0.25rem 1rem;
+  font-size: 0.85rem;
+}
+
+#img {
+        width: 80%;
+        max-width: 280px;
+    }
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .row > div {
+    margin-bottom: 1rem;
+  }
+}

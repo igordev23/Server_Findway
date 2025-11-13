@@ -1,0 +1,104 @@
+    body {
+        height: 100vh;
+        background: linear-gradient(135deg, rgb(16, 40, 68),rgb(21, 48, 79));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .login-container {
+        background-color: #f9f9f9;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 900px;
+        width: 100%;
+    }
+
+    .login-left {
+        background-color: #ffffff;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+    }
+
+    .login-left img {
+        width: 50%;
+        max-width: 100px;
+    }
+
+    .login-right {
+        flex: 1;
+        padding: 50px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .login-right h3 {
+        font-weight: 600;
+        margin-bottom: 25px;
+        color: #333;
+        text-align: center;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    #btnLogin {
+        width: 100%;
+        background-color: #2ecc71;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+    #btnLogin:hover {
+        background-color: #27ae60;
+    }
+
+    #erro {
+        color: red;
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .text-muted a {
+      text-decoration: none;
+      color: #6c757d;
+      transition: 0.3s;
+    }
+
+    .text-muted a:hover {
+      color: #2ecc71;
+    }
+
+    @media (max-width: 768px) {
+        .login-left {
+            display: none;
+        }
+
+        .login-right {
+            width: 100%;
+        }
+
+        .login-container {
+            border-radius: 15px;
+            margin: 0 20px;
+        }
+    }
