@@ -52,6 +52,6 @@
 <!-- Configuração do Firebase (injetada pelo Flask) -->
 <script id="firebase-config" type="application/json">{{ firebase_config | tojson }}</script>
 
-<!-- Script JS específico da tela -->
+<!-- Script JS específico da tela de login -->
 <script src="{{ url_for('static', filename='assets/js/loginFirebase/login.js') }}"></script>
 {% endblock javascripts %}
