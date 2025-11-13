@@ -1,125 +1,73 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FindWay - Monitoramento</title>
+{% extends "layouts/base.html" %}
+{% block title %}FindWay - Rastreamento em Tempo Real{% endblock %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row gx-4 gy-4">
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-</head>
-
-<body class="bg-light">
-  <!-- Configuração do Firebase -->
-  <script id="firebase-config" type="application/json">{{ firebase_config | tojson }}</script>
-
-  <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-      <h2 class="text-primary"><i class="bi bi-geo-alt-fill me-2"></i>FindWay</h2>
-      <div>
-        <span class="fw-bold">Veículo:</span> ABC-1234<br />
-        <span class="fw-bold">Status:</span>
-        <span class="text-success">Online <i class="bi bi-circle-fill"></i></span>
-      </div>
-      <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
-        <i class="bi bi-box-arrow-right"></i> Sair
-      </button>
-    </div>
-
-    <div class="d-flex justify-content-end mb-3">
-      <a href="/historico" class="btn btn-primary">
-        <i class="bi bi-clock-history me-1"></i> Abrir Histórico (Últimas 24h)
-      </a>
-    </div>
-
-    <div class="row mb-4">
-      <div class="col-lg-8 mb-3">
-        <div class="card h-100">
-          <div class="card-header bg-primary text-white">
-            <i class="bi bi-map-fill me-1"></i> Localização Atual
+    <!-- 🗺️ Mapa (Ampliado) -->
+    <div class="col-lg-9 col-md-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white fw-semibold">
+          <i class="bi bi-map-fill me-1"></i> Localização Atual
+        </div>
+        <div class="card-body p-0 position-relative">
+          <div id="map-loading" class="position-absolute top-50 start-50 translate-middle text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted small">Carregando mapa...</p>
           </div>
-          <div class="card-body p-0">
-            <div id="map" style="height: 400px;"></div>
-          </div>
+          <!-- Altura aumentada -->
+          <div id="map" style="height: 620px; border-radius: 0 0 12px 12px;"></div>
         </div>
       </div>
+    </div>
 
-      <div class="col-lg-4">
-        <div class="card">
-          <div class="card-header bg-secondary text-white">
-            <i class="bi bi-speedometer2 me-1"></i> Dados em Tempo Real
-          </div>
-          <div class="card-body">
-            <p><i class="bi bi-geo-alt"></i> Latitude: <span id="lat">--</span></p>
-            <p><i class="bi bi-geo"></i> Longitude: <span id="lng">--</span></p>
-            <p><i class="bi bi-clock-history"></i> Atualizado: <span id="ultima-atualizacao">--</span></p>
-          </div>
+    <!-- ⚙️ Dados em Tempo Real (Reduzidos e mais limpos) -->
+    <div class="col-lg-3 col-md-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-success text-white fw-semibold">
+          <i class="bi bi-speedometer2 me-1"></i> Dados em Tempo Real
         </div>
+        <div class="card-body py-3 small">
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-geo-alt text-primary me-2"></i>
+            <strong>Latitude:</strong>&nbsp;<span id="lat" class="text-muted">--</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-geo text-primary me-2"></i>
+            <strong>Longitude:</strong>&nbsp;<span id="lng" class="text-muted">--</span>
+          </div>
+          <div class="d-flex align-items-center">
+            <i class="bi bi-clock-history text-secondary me-2"></i>
+            <strong>Atualizado:</strong>&nbsp;<span id="ultima-atualizacao" class="text-muted">--</span>
+          </div>
+          <hr>
+          <button class="btn btn-outline-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#historicoModal">
+            <i class="bi bi-clock-history me-1"></i> Ver histórico 24h
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 🕒 Modal Histórico -->
+<div class="modal fade" id="historicoModal" tabindex="-1" aria-labelledby="historicoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="historicoModalLabel">
+          <i class="bi bi-clock-history me-2"></i> Histórico das Últimas 24h
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <ul id="lista-historico" class="list-group small">
+          <li class="list-group-item">Carregando dados...</li>
+        </ul>
       </div>
     </div>
   </div>
-
-  <!-- Controle de autenticação -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      console.log("🔄 Página HOME carregada.");
-
-      const firebaseConfig = JSON.parse(document.getElementById("firebase-config").textContent);
-
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-        console.log("✅ Firebase inicializado (home).");
-      } else {
-        console.log("⚠️ Firebase já estava inicializado (home).");
-      }
-
-      const auth = firebase.auth();
-      let hasRedirected = false;
-
-      auth.onAuthStateChanged((user) => {
-        console.log("home onAuthStateChanged ->", user ? user.email : null);
-        if (!user && !hasRedirected) {
-          hasRedirected = true;
-          console.log("🚪 Usuário não autenticado — redirecionando para /login?logged_out=1");
-          window.location.replace("/login?logged_out=1");
-        }
-      });
-
-      const logoutBtn = document.getElementById("logoutBtn");
-      logoutBtn.addEventListener("click", async () => {
-        console.log("🧭 Clicou em sair...");
-        try {
-          await auth.signOut();
-          console.log("✅ signOut() finalizado.");
-          localStorage.removeItem("token");
-          if (!hasRedirected) {
-            hasRedirected = true;
-            window.location.replace("/login?logged_out=1");
-          }
-        } catch (error) {
-          console.error("❌ Erro ao sair:", error);
-          alert("Erro ao sair. Veja o console.");
-        }
-      });
-    });
-  </script>
-
-  <!-- Bootstrap -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Script principal -->
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
-
-  <!-- Google Maps: chama initMap automaticamente -->
-  <script
-    async
-    defer
-    src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap">
-  </script>
-</body>
-</html>
+</div>
+{% endblock %}
