@@ -6,3 +6,4 @@ python-dotenv
 Flask-SQLAlchemy
 config
 pytz
+firebase-admin
