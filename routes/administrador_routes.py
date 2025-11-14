@@ -63,7 +63,17 @@ def deletar_administrador(id):
     if not admin:
         return jsonify({"error": "Administrador não encontrado"}), 404
 
-    db.session.delete(admin)
-    db.session.commit()
+    try:
+        # 1️⃣ Remover do Firebase Authentication (se tiver UID)
+        if admin.firebase_uid:
+            auth.delete_user(admin.firebase_uid)
 
-    return jsonify({"message": "Administrador removido"})
+        # 2️⃣ Remover do banco (Administrador + Usuario automaticamente)
+        db.session.delete(admin)
+        db.session.commit()
+
+        return jsonify({"message": "Administrador removido com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
