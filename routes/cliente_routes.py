@@ -99,6 +99,7 @@ def criar_cliente():
         return jsonify({"error": str(e)}), 400
     
     
+
 @cliente_bp.route("/clientes/<int:id>", methods=["DELETE"])
 def deletar_cliente(id):
     cliente = Cliente.query.get(id)
