@@ -53,6 +53,61 @@ def obter_administrador(id):
     })
 
 
+
+# ==============================
+#   ATUALIZAR ADMINISTRADOR
+# ==============================
+@administrador_bp.route("/administradores/<int:id>", methods=["PUT"])
+def atualizar_administrador(id):
+    admin = Administrador.query.get(id)
+
+    if not admin:
+        return jsonify({"error": "Administrador não encontrado"}), 404
+
+    dados = request.json
+
+    novo_nome = dados.get("nome")
+    novo_email = dados.get("email")
+    novo_telefone = dados.get("telefone")
+    nova_senha = dados.get("senha")
+
+    try:
+        # 1️⃣ Atualizar no Firebase (se tiver UID)
+        if admin.firebase_uid:
+            update_data = {}
+
+            if novo_email:
+                update_data["email"] = novo_email
+
+            if nova_senha:
+                update_data["password"] = nova_senha
+
+            if update_data:
+                auth.update_user(admin.firebase_uid, **update_data)
+
+        # 2️⃣ Atualizar no PostgreSQL
+        if novo_nome:
+            admin.nome = novo_nome
+
+        if novo_email:
+            admin.email = novo_email
+
+        if novo_telefone:
+            admin.telefone = novo_telefone
+
+        admin.atualizado_em = datetime.now(br_tz)
+
+        db.session.commit()
+
+        return jsonify({"message": "Administrador atualizado com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
+
+
+
+
 # ==============================
 #   DELETAR ADMINISTRADOR
 # ==============================
