@@ -17,8 +17,11 @@ def listar_veiculos():
         "marca": v.marca,
         "ano": v.ano,
         "status_ignicao": v.status_ignicao,
-        "ativo": v.ativo
+        "ativo": v.ativo,
+        "cliente_id": v.cliente_id,
+        "cliente_nome": v.cliente.nome if v.cliente else None  # opcional
     } for v in veiculos])
+
 
 @veiculo_bp.route("/veiculos/<int:id>", methods=["GET"])
 def obter_veiculo(id):
