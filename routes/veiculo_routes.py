@@ -58,3 +58,19 @@ def criar_veiculo():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+
+
+@veiculo_bp.route("/veiculos/<int:id>", methods=["DELETE"])
+def deletar_veiculo(id):
+    veiculo = Veiculo.query.get(id)
+
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    try:
+        db.session.delete(veiculo)
+        db.session.commit()
+        return jsonify({"message": f"Veículo {veiculo.placa} removido com sucesso!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Erro ao remover veículo: {str(e)}"}), 500
