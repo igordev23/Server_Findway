@@ -7,7 +7,7 @@ class Cliente(Usuario):
     id = db.Column(db.BigInteger, db.ForeignKey("Usuario.id"), primary_key=True)
 
     # Quem criou este cliente (um Administrador)
-    criado_por = db.Column(db.BigInteger, db.ForeignKey("Administrador.id"), nullable=False)
+    administrador_id = db.Column(db.BigInteger, db.ForeignKey("Administrador.id"), nullable=False)
 
     rua = db.Column(db.String(255), nullable=False)
     cidade = db.Column(db.String(255), nullable=False)

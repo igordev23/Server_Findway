@@ -97,3 +97,34 @@ def criar_cliente():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+    
+    
+@cliente_bp.route("/clientes/<int:id>", methods=["DELETE"])
+def deletar_cliente(id):
+    cliente = Cliente.query.get(id)
+
+    if not cliente:
+        return jsonify({"error": "Cliente não encontrado"}), 404
+
+    # 1️⃣ Remover do Firebase (se tiver UID)
+    if cliente.firebase_uid:
+        try:
+            auth.delete_user(cliente.firebase_uid)
+        except Exception as e:
+            return jsonify({
+                "error": f"Erro ao remover do Firebase: {str(e)}"
+            }), 500
+
+    # 2️⃣ Remover do banco (Cliente + Usuario por cascata)
+    try:
+        db.session.delete(cliente)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": f"Erro ao remover cliente no banco: {str(e)}"
+        }), 500
+
+    return jsonify({
+        "message": "Cliente removido completamente (Banco + Firebase)"
+    })

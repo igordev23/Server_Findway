@@ -66,6 +66,7 @@ def criar_usuario():
         # ======================================================
 
         # ----------- CLIENTE -----------
+        # ----------- CLIENTE -----------
         if tipo_usuario == "cliente":
 
             user = Cliente(
@@ -77,7 +78,8 @@ def criar_usuario():
                 criado_em=datetime.now(br_tz),
 
                 # Quem criou o cliente (um Administrador)
-                criado_por=data["criado_por"],
+                administrador_id=data["administrador_id"],
+
 
                 rua=data["rua"],
                 cidade=data["cidade"],
@@ -85,6 +87,7 @@ def criar_usuario():
                 cep=data["cep"],
                 numero=data["numero"]
             )
+
 
         # ----------- ADMINISTRADOR -----------
         elif tipo_usuario == "administrador":
