@@ -1,0 +1,139 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Configurações de Segurança{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-xl-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-light">
+          <h6 class="mb-0 fw-semibold">Alteração de senha</h6>
+        </div>
+        <div class="card-body">
+          <form>
+            <div class="mb-3">
+              <label class="form-label">Senha atual</label>
+              <input type="password" class="form-control" placeholder="********">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nova senha</label>
+              <input type="password" class="form-control" placeholder="********">
+              <small class="text-muted">Use letras maiúsculas, números e caracteres especiais.</small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirmar nova senha</label>
+              <input type="password" class="form-control" placeholder="********">
+            </div>
+            <button class="btn btn-primary" type="button">Atualizar senha</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-semibold">PIN para comandos</h6>
+          <span class="badge text-bg-secondary">Obrigatório para corte</span>
+        </div>
+        <div class="card-body">
+          <form>
+            <div class="mb-3">
+              <label class="form-label">PIN atual</label>
+              <input type="password" class="form-control" placeholder="****">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Novo PIN</label>
+              <input type="password" class="form-control" placeholder="****">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirmar PIN</label>
+              <input type="password" class="form-control" placeholder="****">
+            </div>
+            <button class="btn btn-primary" type="button">Salvar PIN</button>
+          </form>
+          <hr>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="pinComandos" checked>
+            <label class="form-check-label" for="pinComandos">Exigir PIN para qualquer comando crítico</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-xl-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+          <h6 class="mb-0 fw-semibold">Contatos de emergência</h6>
+        </div>
+        <div class="card-body">
+          <p class="text-muted small">Informe quem será notificado em caso de corte ou alerta crítico.</p>
+          <div class="list-group mb-4">
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-0">Maria Fernanda</h6>
+                <small class="text-muted">+55 11 90000-1111</small>
+              </div>
+              <button class="btn btn-sm btn-outline-danger" type="button">Remover</button>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-0">Carlos Souza</h6>
+                <small class="text-muted">carlos@email.com</small>
+              </div>
+              <button class="btn btn-sm btn-outline-danger" type="button">Remover</button>
+            </div>
+          </div>
+          <form class="row g-2">
+            <div class="col-md-5">
+              <input type="text" class="form-control" placeholder="Nome completo">
+            </div>
+            <div class="col-md-5">
+              <input type="text" class="form-control" placeholder="E-mail ou telefone">
+            </div>
+            <div class="col-md-2 d-grid">
+              <button class="btn btn-outline-primary" type="button">Adicionar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-light">
+          <h6 class="mb-0 fw-semibold">Sessões e dispositivos</h6>
+        </div>
+        <div class="card-body">
+          <p class="text-muted small">Gerencie os dispositivos autorizados para receber tokens e notificações.</p>
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>Dispositivo</th>
+                <th>Último acesso</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>iPhone 14</td>
+                <td>Hoje • 08:45</td>
+                <td><span class="badge text-bg-success">Confiável</span></td>
+              </tr>
+              <tr>
+                <td>Chrome - Desktop</td>
+                <td>Ontem • 21:12</td>
+                <td><button class="btn btn-link btn-sm p-0">Revogar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

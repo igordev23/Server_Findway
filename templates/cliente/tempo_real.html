@@ -1,0 +1,86 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Acompanhamento em Tempo Real{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-geo-alt me-2"></i>Localização ao vivo</span>
+            <small class="text-white-50">Atualização automática a cada 5 segundos</small>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div id="mapaTempoReal" style="height: 520px;" class="w-100 bg-light">
+            <div class="d-flex h-100 align-items-center justify-content-center text-muted">
+              <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <p class="mb-0">Mapa interativo (Google Maps, Mapbox ou alternativa aberta)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h6 class="fw-semibold mb-3">Status do rastreamento</h6>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Cliente
+              <span class="fw-semibold">João Silva</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Última atualização
+              <span class="badge text-bg-success">há 4s</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Status GPS
+              <span class="text-success fw-semibold">Conectado</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Velocidade atual
+              <span>52 km/h</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="fw-semibold mb-3">Últimos eventos</h6>
+          <div class="list-group list-group-flush">
+            <div class="list-group-item d-flex align-items-center">
+              <i class="bi bi-dot text-success fs-4 me-2"></i>
+              <div>
+                <p class="mb-0 fw-semibold">Moto em movimento</p>
+                <small class="text-muted">Há 2 min</small>
+              </div>
+            </div>
+            <div class="list-group-item d-flex align-items-center">
+              <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+              <div>
+                <p class="mb-0 fw-semibold">Sinal fraco</p>
+                <small class="text-muted">Há 7 min</small>
+              </div>
+            </div>
+            <div class="list-group-item d-flex align-items-center">
+              <i class="bi bi-plug text-primary me-2"></i>
+              <div>
+                <p class="mb-0 fw-semibold">Ignition OK</p>
+                <small class="text-muted">Há 15 min</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
