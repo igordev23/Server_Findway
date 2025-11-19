@@ -1,0 +1,146 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Controle de Ignição{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-power me-2"></i>Status da ignição</span>
+          <span class="badge text-bg-light text-danger">Remoto seguro</span>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+              <p class="text-muted mb-1">Status atual</p>
+              <h3 class="mb-0">Ligada</h3>
+              <small class="text-muted">Atualizado há 1 minuto</small>
+            </div>
+            <div class="text-md-end">
+              <p class="text-muted mb-1">Último comando</p>
+              <h5 class="mb-0">Reativação confirmada</h5>
+              <small class="text-muted">Operador: Cliente</small>
+            </div>
+          </div>
+          <hr>
+          <div class="d-flex flex-column flex-md-row gap-3">
+            <button class="btn btn-outline-danger flex-fill" data-bs-toggle="modal" data-bs-target="#modalCortar">
+              <i class="bi bi-slash-circle me-2"></i>Cortar ignição
+            </button>
+            <button class="btn btn-outline-success flex-fill" data-bs-toggle="modal" data-bs-target="#modalReativar">
+              <i class="bi bi-check-circle me-2"></i>Reativar ignição
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card shadow-sm border-0 mt-4">
+        <div class="card-body">
+          <h6 class="fw-semibold mb-3">Log de comandos</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Ação</th>
+                  <th>Origem</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>19/11/2025 10:32</td>
+                  <td>Corte da ignição</td>
+                  <td>App Cliente</td>
+                  <td><span class="badge text-bg-success">Confirmado</span></td>
+                </tr>
+                <tr>
+                  <td>18/11/2025 22:14</td>
+                  <td>Reativação</td>
+                  <td>Central</td>
+                  <td><span class="badge text-bg-success">Concluído</span></td>
+                </tr>
+                <tr>
+                  <td>18/11/2025 09:03</td>
+                  <td>Corte</td>
+                  <td>App Cliente</td>
+                  <td><span class="badge text-bg-warning">Pendente</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="fw-semibold mb-3">Proteção adicional</h6>
+          <form>
+            <div class="mb-3">
+              <label class="form-label">PIN de confirmação</label>
+              <div class="input-group">
+                <input type="password" class="form-control" placeholder="****">
+                <button class="btn btn-outline-secondary" type="button">Alterar PIN</button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Autorização rápida</label>
+              <select class="form-select">
+                <option>Solicitar PIN a cada comando</option>
+                <option>Usar PIN apenas para corte</option>
+              </select>
+            </div>
+            <button class="btn btn-primary w-100" type="button">Salvar preferências</button>
+          </form>
+        </div>
+      </div>
+      <div class="alert alert-warning mt-4">
+        <strong>Atenção:</strong> o comando remoto dependerá da conectividade atual do rastreador.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modais -->
+<div class="modal fade" id="modalCortar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar corte da ignição</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Insira seu PIN para confirmar o bloqueio imediato da moto.</p>
+        <input type="password" class="form-control mb-3" placeholder="****">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="alertarContato">
+          <label class="form-check-label" for="alertarContato">Notificar contatos de emergência</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger">Confirmar corte</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalReativar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reativar ignição</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Confirme que o veículo está em local seguro antes de liberar a ignição.</p>
+        <button class="btn btn-outline-primary w-100" type="button">Enviar comando</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

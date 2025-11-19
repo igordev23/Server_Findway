@@ -1,0 +1,99 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Monitoramento em Tempo Real{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <form class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Cliente</label>
+          <select class="form-select">
+            <option>Todos</option>
+            <option>João Silva</option>
+            <option>Maria Santos</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Veículo</label>
+          <select class="form-select">
+            <option>Todos</option>
+            <option>Moto ABC1D23</option>
+            <option>Moto XYZ9K88</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select">
+            <option>Todos</option>
+            <option>Online</option>
+            <option>Offline</option>
+            <option>Em alerta</option>
+          </select>
+        </div>
+        <div class="col-md-3 text-md-end">
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+            <label class="form-check-label" for="autoRefresh">Atualizar automaticamente (a cada 10s)</label>
+          </div>
+          <button class="btn btn-primary" type="button">Atualizar agora</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-xl-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+          Visualização simultânea
+        </div>
+        <div class="card-body p-0">
+          <div id="mapaMonitoramento" style="height: 520px;" class="bg-light">
+            <div class="d-flex h-100 align-items-center justify-content-center text-muted">
+              <div class="text-center px-4">
+                <i class="bi bi-globe-americas fs-1 mb-3"></i>
+                <p class="mb-0">Todos os veículos filtrados aparecerão aqui com atualizações automáticas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-semibold">Veículos monitorados</h6>
+          <span class="badge text-bg-primary">12 no filtro</span>
+        </div>
+        <div class="list-group list-group-flush">
+          <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <span>
+              <strong>Moto ABC1D23</strong>
+              <small class="d-block text-muted">Cliente João • há 3s</small>
+            </span>
+            <span class="badge rounded-pill text-bg-success">Online</span>
+          </button>
+          <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <span>
+              <strong>Moto XYZ9K88</strong>
+              <small class="d-block text-muted">Cliente Maria • há 12s</small>
+            </span>
+            <span class="badge rounded-pill text-bg-danger">Alerta</span>
+          </button>
+          <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <span>
+              <strong>Moto DEMO</strong>
+              <small class="d-block text-muted">Cliente Demo • há 1min</small>
+            </span>
+            <span class="badge rounded-pill text-bg-secondary">Offline</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

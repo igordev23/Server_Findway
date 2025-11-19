@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <div class="sidebar">
   <div class="sidebar-inner">
     <!-- ### LOGO ### -->
@@ -12,6 +13,85 @@
           <a href="#" class="text-white">
             <i class="ti-close"></i>
           </a>
+=======
+<div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="mainSidebar" aria-labelledby="mainSidebarLabel"
+  data-bs-scroll="true">
+  <div class="offcanvas-header border-bottom border-light">
+    <div class="d-flex align-items-center gap-2">
+      <img src="{{ url_for('static', filename='assets/images/logo-findway.jpg') }}" alt="Logo Findway" width="36"
+        height="36" class="rounded-circle">
+      <div>
+        <h5 class="offcanvas-title mb-0" id="mainSidebarLabel">Findway</h5>
+        <small class="text-white-50">Painel de controle</small>
+      </div>
+    </div>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+  </div>
+
+  <div class="offcanvas-body px-0 d-flex flex-column">
+    <nav class="nav nav-pills flex-column">
+      <a class="nav-link text-white d-flex align-items-center gap-2 py-3 px-4" href="/home">
+        <i class="bi bi-speedometer2"></i>
+        <span>Home (Cliente)</span>
+      </a>
+      <a class="nav-link text-white d-flex align-items-center gap-2 py-3 px-4" href="/cliente/tempo-real">
+        <i class="bi bi-geo-alt"></i>
+        <span>Tempo real</span>
+      </a>
+      <a class="nav-link text-white d-flex align-items-center gap-2 py-3 px-4" href="/cliente/historico-rotas">
+        <i class="bi bi-map"></i>
+        <span>Histórico de rotas</span>
+      </a>
+      <a class="nav-link text-white d-flex align-items-center gap-2 py-3 px-4" href="/cliente/ignicao">
+        <i class="bi bi-power"></i>
+        <span>Controle de ignição</span>
+      </a>
+      <a class="nav-link text-white d-flex align-items-center gap-2 py-3 px-4" href="/cliente/notificacoes">
+        <i class="bi bi-bell"></i>
+        <span>Notificações</span>
+      </a>
+      <a class="nav-link text-white d-flex align-items-center gap-2 py-3 px-4" href="/cliente/configuracoes-seguranca">
+        <i class="bi bi-shield-lock"></i>
+        <span>Segurança</span>
+      </a>
+    </nav>
+
+    <div class="px-4 mt-4">
+      <div class="accordion accordion-flush" id="sidebarAdmin">
+        <div class="accordion-item bg-transparent text-white border-top border-light">
+          <h2 class="accordion-header" id="adminHeading">
+            <button class="accordion-button collapsed bg-transparent text-white px-0" type="button"
+              data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-expanded="false" aria-controls="adminMenu">
+              <i class="bi bi-shield-lock me-2"></i>
+              Administração
+            </button>
+          </h2>
+          <div id="adminMenu" class="accordion-collapse collapse" aria-labelledby="adminHeading"
+            data-bs-parent="#sidebarAdmin">
+            <div class="accordion-body px-0 pt-0">
+              <a class="d-flex align-items-center gap-2 text-white-50 py-1" href="/admin/dashboard">
+                <i class="bi bi-columns-gap"></i>
+                <span>Dashboard</span>
+              </a>
+              <a class="d-flex align-items-center gap-2 text-white-50 py-1" href="/admin/veiculos">
+                <i class="bi bi-truck"></i>
+                <span>Veículos ativos</span>
+              </a>
+              <a class="d-flex align-items-center gap-2 text-white-50 py-1" href="/admin/monitoramento">
+                <i class="bi bi-activity"></i>
+                <span>Monitoramento</span>
+              </a>
+              <a class="d-flex align-items-center gap-2 text-white-50 py-1" href="/admin/clientes">
+                <i class="bi bi-people"></i>
+                <span>Clientes & veículos</span>
+              </a>
+              <a class="d-flex align-items-center gap-2 text-white-50 py-1" href="/admin/relatorios">
+                <i class="bi bi-clipboard-data"></i>
+                <span>Relatórios</span>
+              </a>
+            </div>
+          </div>
+>>>>>>> Stashed changes
         </div>
       </div>
     </div>
