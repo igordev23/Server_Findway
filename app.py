@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request
 from config import Config
 from database import db
 from dotenv import load_dotenv
@@ -33,7 +33,7 @@ app.register_blueprint(usuario_bp)
 app.register_blueprint(veiculo_localizacao_bp)
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
     firebase_config = {
         "apiKey": os.getenv("FIREBASE_API_KEY"),
@@ -44,6 +44,12 @@ def login():
         "appId": os.getenv("FIREBASE_APP_ID"),
         "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID")
     }
+    # Se o formulário for submetido por POST, apenas renderizamos novamente a página
+    # (a autenticação é feita client-side via Firebase). Isso evita 405 Method Not Allowed
+    # quando o form posta para /login (por exemplo quando há query string).
+    if request.method == "POST":
+        return render_template("login.html", firebase_config=firebase_config)
+
     return render_template("login.html", firebase_config=firebase_config)
 
 

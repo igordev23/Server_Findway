@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const firebaseConfig = JSON.parse(document.getElementById("firebase-config").textContent);
-  firebase.initializeApp(firebaseConfig);
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
 
   const auth = firebase.auth();
 
