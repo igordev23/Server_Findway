@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request
 from config import Config
 from database import db
 from dotenv import load_dotenv
@@ -33,26 +33,17 @@ app.register_blueprint(usuario_bp)
 app.register_blueprint(veiculo_localizacao_bp)
 
 
-<<<<<<< Updated upstream
-@app.route("/login")
-def login():
-    firebase_config = {
-=======
 def get_firebase_config():
     """Retorna o dicionário de configuração do Firebase para injetar nos templates."""
     return {
->>>>>>> Stashed changes
         "apiKey": os.getenv("FIREBASE_API_KEY"),
         "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
         "projectId": os.getenv("FIREBASE_PROJECT_ID"),
         "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
         "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
         "appId": os.getenv("FIREBASE_APP_ID"),
-        "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID")
+        "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID"),
     }
-<<<<<<< Updated upstream
-    return render_template("login.html", firebase_config=firebase_config)
-=======
 
 
 def render_with_firebase(template_name, **context):
@@ -69,7 +60,6 @@ def login():
     if request.method == "POST":
         return render_with_firebase("login.html")
     return render_with_firebase("login.html")
->>>>>>> Stashed changes
 
 
 @app.route("/")
