@@ -24,7 +24,7 @@
       <p class="text-muted">Digite seu e-mail e senha para acessar o sistema.</p>
     {% endif %}
 
-    <form id="loginForm" method="POST" action="">
+    <form id="loginForm" method="POST" action="/login">
       <div class="mb-3">
         <input type="email" class="form-control" id="email" placeholder="Email" required>
       </div>
@@ -54,4 +54,5 @@
 
 <!-- Script JS específico da tela de login -->
 <script src="{{ url_for('static', filename='assets/js/loginFirebase/login.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/auth-check.js') }}"></script>
 {% endblock javascripts %}

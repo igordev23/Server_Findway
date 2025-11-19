@@ -49,12 +49,9 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script id="firebase-config" type="application/json">{{ firebase_config | tojson }}</script>
+  <!-- Verificação centralizada de autenticação (carrega após SDK/config) -->
+  <script src="{{ url_for('static', filename='assets/js/auth-check.js') }}"></script>
   {% endif %}
-
-  <!-- Script principal da aplicação -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.js"></script>
-  <script src="{{ url_for('static', filename='assets/js/index.js') }}"></script>
 
   {% block javascripts %}{% endblock %}
 </body>

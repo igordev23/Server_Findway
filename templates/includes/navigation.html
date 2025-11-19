@@ -1,90 +1,77 @@
-<div class="header navbar shadow-sm bg-white fixed-top">
-  <div class="header-container d-flex justify-content-between align-items-center px-3">
+<nav class="navbar navbar-expand bg-white border-bottom shadow-sm fixed-top">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center">
+      <button class="btn btn-outline-primary me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainSidebar"
+        aria-controls="mainSidebar" aria-label="Abrir menu lateral">
+        <i class="bi bi-list"></i>
+      </button>
+      <a class="navbar-brand fw-semibold text-primary d-flex align-items-center gap-2" href="/home">
+        <img src="{{ url_for('static', filename='assets/images/logo-findway.jpg') }}" alt="Logo Findway" width="36"
+        height="36" class="rounded-circle">
+      </a>
+    </div>
 
-    <!-- Botão de menu lateral -->
-    <ul class="nav-left d-flex align-items-center mb-0">
-      <li>
-        <a id="sidebar-toggle" class="sidebar-toggle" href="javascript:void(0);">
-          <i class="ti-menu fsz-lg"></i>
-        </a>
-      </li>
-    </ul>
-
-    <!-- Lado direito da navbar (posicionado no canto superior direito) -->
-    <ul class="nav-right d-flex align-items-center mb-0 ms-auto" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 1030;">
-
-      <!-- Notificações -->
-      <li class="notifications dropdown me-3 position-relative">
-        <span class="counter bgc-red position-absolute top-0 start-100 translate-middle badge rounded-pill">
-          3
-        </span>
-        <a href="#" class="dropdown-toggle no-after text-dark" data-bs-toggle="dropdown">
-          <i class="ti-bell fsz-lg"></i>
-        </a>
-
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+    <div class="d-flex align-items-center gap-3 ms-auto">
+      <div class="dropdown">
+        <button class="btn btn-link text-dark position-relative p-0 text-decoration-none" type="button"
+          id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Abrir notificações">
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            3
+            <span class="visually-hidden">novas notificações</span>
+          </span>
+          <i class="bi bi-bell fs-5"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationsDropdown">
           <li class="px-3 py-2 border-bottom">
-            <i class="ti-bell me-2 text-primary"></i>
-            <span class="fw-semibold">Notificações Recentes</span>
+            <div class="fw-semibold text-uppercase small text-muted">Notificações recentes</div>
           </li>
           <li>
-            <a href="#" class="dropdown-item small text-secondary">Veículo ID-1234 perdeu sinal GPS</a>
+            <a class="dropdown-item small text-muted" href="#">Veículo ID-1234 perdeu sinal GPS</a>
           </li>
           <li>
-            <a href="#" class="dropdown-item small text-secondary">Novo cliente cadastrado</a>
+            <a class="dropdown-item small text-muted" href="#">Novo cliente cadastrado</a>
           </li>
           <li>
-            <a href="#" class="dropdown-item small text-secondary">Rastreador desconectado há 5 min</a>
+            <a class="dropdown-item small text-muted" href="#">Rastreador desconectado há 5 min</a>
           </li>
+          <li><hr class="dropdown-divider"></li>
           <li>
-            <hr class="dropdown-divider">
-          </li>
-          <li class="text-center">
-            <a href="#" class="small text-primary">Ver todas</a>
+            <a class="dropdown-item text-primary text-center" href="#">Ver todas</a>
           </li>
         </ul>
-      </li>
+      </div>
 
-      <!-- Perfil do usuário -->
-      <li class="dropdown">
-        <a href="#" class="dropdown-toggle no-after d-flex align-items-center text-dark" data-bs-toggle="dropdown">
-          <div>
-            <span class="fw-semibold d-block">user.name</span>
-            <small class="text-muted">
-            </small>
+      <div class="dropdown">
+        <button class="btn btn-link text-dark text-decoration-none d-flex align-items-center gap-2" type="button"
+          id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person-circle fs-4"></i>
+          <div class="text-start">
+            <span class="fw-semibold d-block small">user.name</span>
+            <small class="text-muted d-block">Minha conta</small>
           </div>
-        </a>
-
-        <!-- Dropdown -->
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">
           <li>
-            <a href="/perfil" class="dropdown-item">
-              <i class="ti-user me-2 text-secondary"></i> Meu Perfil
+            <a class="dropdown-item d-flex align-items-center gap-2" href="/perfil">
+              <i class="bi bi-person"></i>
+              <span>Meu Perfil</span>
             </a>
           </li>
-
           <li>
-            <a href="/meus-veiculos" class="dropdown-item">
-              <i class="ti-car me-2 text-secondary"></i> Meus Veículos
+            <a class="dropdown-item d-flex align-items-center gap-2" href="/meus-veiculos">
+              <i class="bi bi-truck"></i>
+              <span>Meus Veículos</span>
             </a>
           </li>
-
-          <!-- <li>
-            <a href="/relatorios" class="dropdown-item">
-              <i class="ti-bar-chart me-2 text-secondary"></i> Relatórios
-            </a>
-          </li> -->
-
+          <li><hr class="dropdown-divider"></li>
           <li>
-            <hr class="dropdown-divider">
-          </li>
-          <li>
-            <a href="#" id="logoutLink" class="dropdown-item text-danger">
-              <i class="ti-power-off me-2"></i> Sair
+            <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="#" id="logoutLink">
+              <i class="bi bi-box-arrow-right"></i>
+              <span>Sair</span>
             </a>
           </li>
         </ul>
-      </li>
-    </ul>
+      </div>
+    </div>
   </div>
-</div>
+</nav>
