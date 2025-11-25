@@ -2,6 +2,7 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f8f9fa;
+   padding-top: 70px;
 }
 
 .card {
@@ -51,3 +52,64 @@ h2 {
     margin-bottom: 1rem;
   }
 }
+
+/* ====== RESET GERAL DOS LINKS ====== */
+a {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+a:hover {
+  opacity: .8;
+}
+
+/* ====== SIDEBAR: estilos suaves ====== */
+#mainSidebar .nav-link {
+  border-radius: .375rem;
+  transition: background .2s;
+}
+
+#mainSidebar .nav-link:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+/* link ativo (você pode setar dinamicamente com Jinja) */
+#mainSidebar .nav-link.active {
+  background: #e9f1ff !important;
+  color: #0d6efd !important;
+}
+
+/* acordeão admin */
+#mainSidebar .accordion-button {
+  box-shadow: none !important;
+}
+
+#mainSidebar .accordion-button:not(.collapsed) {
+  background: rgba(0,0,0,0.05);
+}
+
+/* ====== NAVBAR ====== */
+.navbar-brand {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.nav-right .dropdown-menu a:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+/* Contador notificação */
+.counter {
+  font-size: .65rem;
+  padding: 2px 5px;
+}
+
+/* ====== FOOTER ====== */
+footer {
+  font-size: .85rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e5e5;
+  padding: 20px 10px;
+  text-align: center;
+}
+
