@@ -1,38 +1,30 @@
-<<<<<<< Updated upstream
-<div class="header navbar shadow-sm bg-white fixed-top">
-  <div class="header-container d-flex justify-content-between align-items-center px-3">
-=======
 <nav class="navbar navbar-expand bg-white border-bottom shadow-sm fixed-top">
   <div class="container-fluid">
+
+    <!-- Botão lateral + Marca -->
     <div class="d-flex align-items-center">
-      <button class="btn btn-outline-primary me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainSidebar"
-        aria-controls="mainSidebar" aria-label="Abrir menu lateral">
+      <button class="btn btn-outline-primary me-2"
+        type="button"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#mainSidebar">
         <i class="bi bi-list"></i>
       </button>
+
       <a class="navbar-brand fw-semibold text-primary d-flex align-items-center gap-2" href="/home">
-        <span>Findway</span>
+        Findway
       </a>
     </div>
->>>>>>> Stashed changes
 
-    <!-- Botão de menu lateral -->
-    <ul class="nav-left d-flex align-items-center mb-0">
-      <li>
-        <a id="sidebar-toggle" class="sidebar-toggle" href="javascript:void(0);">
-          <i class="ti-menu fsz-lg"></i>
-        </a>
-      </li>
-    </ul>
-
-    <!-- Lado direito da navbar (posicionado no canto superior direito) -->
-    <ul class="nav-right d-flex align-items-center mb-0 ms-auto" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 1030;">
+    <!-- Menus do lado direito -->
+    <ul class="navbar-nav ms-auto d-flex align-items-center">
 
       <!-- Notificações -->
-      <li class="notifications dropdown me-3 position-relative">
-        <span class="counter bgc-red position-absolute top-0 start-100 translate-middle badge rounded-pill">
+      <li class="nav-item dropdown me-3 position-relative">
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
           3
         </span>
-        <a href="#" class="dropdown-toggle no-after text-dark" data-bs-toggle="dropdown">
+
+        <a href="#" class="nav-link dropdown-toggle text-dark" data-bs-toggle="dropdown">
           <i class="ti-bell fsz-lg"></i>
         </a>
 
@@ -41,74 +33,28 @@
             <i class="ti-bell me-2 text-primary"></i>
             <span class="fw-semibold">Notificações Recentes</span>
           </li>
-          <li>
-            <a href="#" class="dropdown-item small text-secondary">Veículo ID-1234 perdeu sinal GPS</a>
-          </li>
-          <li>
-            <a href="#" class="dropdown-item small text-secondary">Novo cliente cadastrado</a>
-          </li>
-          <li>
-            <a href="#" class="dropdown-item small text-secondary">Rastreador desconectado há 5 min</a>
-          </li>
-          <li>
-<<<<<<< Updated upstream
-            <hr class="dropdown-divider">
-          </li>
-          <li class="text-center">
-            <a href="#" class="small text-primary">Ver todas</a>
-=======
-            <a class="dropdown-item text-primary text-center" href="cliente/notificacoes">Ver todas</a>
->>>>>>> Stashed changes
-          </li>
+          <li><a href="#" class="dropdown-item small text-secondary">Veículo ID-1234 perdeu sinal GPS</a></li>
+          <li><a href="#" class="dropdown-item small text-secondary">Novo cliente cadastrado</a></li>
+          <li><a href="#" class="dropdown-item small text-secondary">Rastreador desconectado há 5 min</a></li>
+          <li><a class="dropdown-item text-primary text-center" href="cliente/notificacoes">Ver todas</a></li>
         </ul>
       </li>
 
-      <!-- Perfil do usuário -->
-      <li class="dropdown">
-        <a href="#" class="dropdown-toggle no-after d-flex align-items-center text-dark" data-bs-toggle="dropdown">
-          <div>
-            <span class="fw-semibold d-block">user.name</span>
-            <small class="text-muted">
-            </small>
-          </div>
+      <!-- Perfil -->
+      <li class="nav-item dropdown">
+        <a href="#" class="nav-link dropdown-toggle d-flex align-items-center text-dark"
+          data-bs-toggle="dropdown">
+          <span class="fw-semibold">user.name</span>
         </a>
 
-        <!-- Dropdown -->
         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-          <li>
-            <a href="/perfil" class="dropdown-item">
-              <i class="ti-user me-2 text-secondary"></i> Meu Perfil
-            </a>
-          </li>
-
-          <li>
-<<<<<<< Updated upstream
-            <a href="/meus-veiculos" class="dropdown-item">
-              <i class="ti-car me-2 text-secondary"></i> Meus Veículos
-=======
-            <a class="dropdown-item d-flex align-items-center gap-2" href="cliete/veiculos">
-              <i class="bi bi-truck"></i>
-              <span>Meus Veículos</span>
->>>>>>> Stashed changes
-            </a>
-          </li>
-
-          <!-- <li>
-            <a href="/relatorios" class="dropdown-item">
-              <i class="ti-bar-chart me-2 text-secondary"></i> Relatórios
-            </a>
-          </li> -->
-
-          <li>
-            <hr class="dropdown-divider">
-          </li>
-          <li>
-            <a href="#" id="logoutLink" class="dropdown-item text-danger">
-              <i class="ti-power-off me-2"></i> Sair
-            </a>
-          </li>
+          <li><a class="dropdown-item" href="/perfil"><i class="ti-user me-2"></i>Meu Perfil</a></li>
+          <li><a class="dropdown-item d-flex align-items-center gap-2" href="/cliente/veiculos"><i class="bi bi-truck"></i>Meus Veículos</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" id="logoutLink" href="#"><i class="ti-power-off me-2"></i>Sair</a></li>
         </ul>
       </li>
     </ul>
+
   </div>
-</div>
+</nav>
