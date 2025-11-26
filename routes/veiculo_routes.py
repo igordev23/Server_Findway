@@ -101,3 +101,21 @@ def atualizar_veiculo(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+    
+# Listar veículos de um cliente específico
+@veiculo_bp.route("/veiculos/cliente/<int:cliente_id>", methods=["GET"])
+def listar_veiculos_cliente(cliente_id):
+    veiculos = Veiculo.query.filter_by(cliente_id=cliente_id).all()
+    if not veiculos:
+        return jsonify({"message": "Nenhum veículo encontrado para este cliente"}), 404
+    return jsonify([{
+        "id": v.id,
+        "placa": v.placa,
+        "modelo": v.modelo,
+        "marca": v.marca,
+        "ano": v.ano,
+        "status_ignicao": v.status_ignicao,
+        "ativo": v.ativo,
+        "cliente_id": v.cliente_id,
+        "cliente_nome": v.cliente.nome if v.cliente else None
+    } for v in veiculos])
