@@ -1,45 +1,57 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 from models.localizacao import Localizacao
+from models.veiculo import Veiculo
 from database import db
-from datetime import datetime, timedelta, timezone
 
-# Nome do blueprint corrigido
-localizacao_bp = Blueprint('localizacao_bp', __name__)
+localizacao_bp = Blueprint("localizacao_bp", __name__)
 
+# Listar todas as localizações com dados do veículo
 @localizacao_bp.route("/localizacao", methods=["GET"])
-def get_latest_localizacao():
-    latest = Localizacao.query.order_by(Localizacao.timestamp.desc()).first()
-    if latest:
-        return jsonify(latest.to_dict())
-    else:
-        return jsonify({"message": "Nenhum dado de localização disponível"})
+def listar_localizacoes():
+    localizacoes = db.session.query(Localizacao, Veiculo).join(
+        Veiculo, Localizacao.placa == Veiculo.placa
+    ).all()
 
+    return jsonify([{
+        "id": loc.Localizacao.id,
+        "placa": loc.Localizacao.placa,
+        "veiculo_id": loc.Veiculo.id,
+        "modelo": loc.Veiculo.modelo,
+        "marca": loc.Veiculo.marca,
+        "latitude": loc.Localizacao.latitude,
+        "longitude": loc.Localizacao.longitude,
+        "timestamp": loc.Localizacao.timestamp.isoformat()
+    } for loc in localizacoes])
 
+# Criar uma nova localização para um veículo existente
 @localizacao_bp.route("/localizacao", methods=["POST"])
-def add_localizacao():
+def criar_localizacao():
     data = request.json
+    placa = data.get("placa")
+    latitude = data.get("latitude")
+    longitude = data.get("longitude")
+    timestamp = data.get("timestamp")
+
+    # Verifica se o veículo existe
+    veiculo = Veiculo.query.filter_by(placa=placa).first()
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado para a placa fornecida"}), 404
+
+    localizacao = Localizacao(
+        placa=placa,
+        latitude=latitude,
+        longitude=longitude,
+        timestamp=timestamp
+    )
+
     try:
-        nome = data.get("nome")
-        lat = float(data.get("latitude"))
-        lon = float(data.get("longitude"))
-    except (TypeError, ValueError):
-        return jsonify({"error": "Latitude e Longitude inválidos"}), 400
-
-    nova_localizacao = Localizacao(nome=nome, latitude=lat, longitude=lon)
-    db.session.add(nova_localizacao)
-    db.session.commit()
-
-    # Remove registros com mais de 24 horas
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
-    Localizacao.query.filter(Localizacao.timestamp < cutoff).delete()
-    db.session.commit()
-
-    print(f"[LOG] Localização salva: {nova_localizacao.latitude}, {nova_localizacao.longitude}, {nova_localizacao.timestamp}")
-
-    return jsonify(nova_localizacao.to_dict()), 201
-
-@localizacao_bp.route("/localizacao/historico", methods=["GET"])
-def historico_localizacao():
-    cutoff = datetime.utcnow() - timedelta(hours=24)
-    dados = Localizacao.query.filter(Localizacao.timestamp >= cutoff).order_by(Localizacao.timestamp.desc()).all()
-    return jsonify([d.to_dict() for d in dados])
+        db.session.add(localizacao)
+        db.session.commit()
+        return jsonify({
+            "message": "Localização criada com sucesso",
+            "id": localizacao.id,
+            "placa": localizacao.placa
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
