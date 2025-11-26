@@ -19,9 +19,8 @@ def listar_veiculos():
         "status_ignicao": v.status_ignicao,
         "ativo": v.ativo,
         "cliente_id": v.cliente_id,
-        "cliente_nome": v.cliente.nome if v.cliente else None  # opcional
+        "cliente_nome": v.cliente.nome if v.cliente else None
     } for v in veiculos])
-
 
 @veiculo_bp.route("/veiculos/<int:id>", methods=["GET"])
 def obter_veiculo(id):
@@ -41,6 +40,9 @@ def obter_veiculo(id):
 @veiculo_bp.route("/veiculos", methods=["POST"])
 def criar_veiculo():
     data = request.json
+    placa_existente = Veiculo.query.filter_by(placa=data["placa"]).first()
+    if placa_existente:
+        return jsonify({"error": "Já existe um veículo com essa placa"}), 400
     try:
         v = Veiculo(
             cliente_id=data["cliente_id"],
@@ -59,14 +61,11 @@ def criar_veiculo():
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
-
 @veiculo_bp.route("/veiculos/<int:id>", methods=["DELETE"])
 def deletar_veiculo(id):
     veiculo = Veiculo.query.get(id)
-
     if not veiculo:
         return jsonify({"error": "Veículo não encontrado"}), 404
-
     try:
         db.session.delete(veiculo)
         db.session.commit()
@@ -74,3 +73,31 @@ def deletar_veiculo(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Erro ao remover veículo: {str(e)}"}), 500
+
+# Rota de atualização de veículo
+@veiculo_bp.route("/veiculos/<int:id>", methods=["PUT"])
+def atualizar_veiculo(id):
+    veiculo = Veiculo.query.get(id)
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    data = request.json
+
+    # Se houver mudança de placa, verifica duplicidade
+    if "placa" in data and data["placa"] != veiculo.placa:
+        placa_existente = Veiculo.query.filter_by(placa=data["placa"]).first()
+        if placa_existente:
+            return jsonify({"error": "Já existe um veículo com essa placa"}), 400
+        veiculo.placa = data["placa"]
+
+    # Atualiza outros campos
+    for campo in ["modelo", "marca", "ano", "status_ignicao", "ativo", "cliente_id"]:
+        if campo in data:
+            setattr(veiculo, campo, data[campo])
+
+    try:
+        db.session.commit()
+        return jsonify({"message": "Veículo atualizado com sucesso"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
