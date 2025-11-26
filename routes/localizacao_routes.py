@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from models.localizacao import Localizacao
 from models.veiculo import Veiculo
 from database import db
+from datetime import datetime, timedelta, timezone
 
 localizacao_bp = Blueprint("localizacao_bp", __name__)
 
@@ -55,3 +56,31 @@ def criar_localizacao():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+
+@localizacao_bp.route("/localizacao/historico", methods=["GET"])
+def historico_localizacao():
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    dados = Localizacao.query.filter(Localizacao.timestamp >= cutoff).order_by(Localizacao.timestamp.desc()).all()
+    return jsonify([d.to_dict() for d in dados])
+
+
+# Localização mais recente por placa
+@localizacao_bp.route("/localizacao/<placa>", methods=["GET"])
+def localizacao_por_placa(placa):
+    localizacao = Localizacao.query.filter_by(placa=placa).order_by(Localizacao.timestamp.desc()).first()
+    if not localizacao:
+        return jsonify({"error": "Nenhuma localização encontrada para esta placa"}), 404
+    return jsonify(localizacao.to_dict())
+
+# Histórico de 24h por placa
+@localizacao_bp.route("/localizacao/<placa>/historico", methods=["GET"])
+def historico_por_placa(placa):
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    dados = Localizacao.query.filter(
+        Localizacao.placa == placa,
+        Localizacao.timestamp >= cutoff
+    ).order_by(Localizacao.timestamp.desc()).all()
+    
+    if not dados:
+        return jsonify({"error": "Nenhuma localização encontrada para esta placa nas últimas 24h"}), 404
+    return jsonify([d.to_dict() for d in dados])

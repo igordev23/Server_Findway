@@ -20,7 +20,6 @@ class Veiculo(db.Model):
 
     # Relacionamentos
     cliente = db.relationship("Cliente", backref="veiculos", uselist=False)
-    localizacoes = db.relationship("VeiculoLocalizacao", backref="veiculo", lazy=True)
     eventos = db.relationship("Evento", backref="veiculo", lazy=True)
 
     def __repr__(self):

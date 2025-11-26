@@ -12,7 +12,6 @@ from routes.cliente_routes import cliente_bp
 from routes.veiculo_routes import veiculo_bp
 from routes.evento_routes import evento_bp
 from routes.usuario_routes import usuario_bp
-from routes.veiculo_localizacao_routes import veiculo_localizacao_bp
 
 load_dotenv()
 
@@ -30,7 +29,6 @@ app.register_blueprint(cliente_bp)
 app.register_blueprint(veiculo_bp)
 app.register_blueprint(evento_bp)
 app.register_blueprint(usuario_bp)
-app.register_blueprint(veiculo_localizacao_bp)
 
 
 def get_firebase_config():
