@@ -19,6 +19,7 @@ class Veiculo(db.Model):
     criado_em = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(br_tz))
 
     # Relacionamentos
+    cliente = db.relationship("Cliente", backref="veiculos", uselist=False)
     localizacoes = db.relationship("VeiculoLocalizacao", backref="veiculo", lazy=True)
     eventos = db.relationship("Evento", backref="veiculo", lazy=True)
 

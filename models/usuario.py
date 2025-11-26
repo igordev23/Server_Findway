@@ -6,6 +6,7 @@ br_tz = pytz.timezone("America/Sao_Paulo")
 
 class Usuario(db.Model):
     __tablename__ = "Usuario"
+
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
@@ -15,9 +16,5 @@ class Usuario(db.Model):
     firebase_uid = db.Column(db.String(128), unique=True, nullable=True)
 
     __mapper_args__ = {
-        "polymorphic_identity": "usuario",
         "polymorphic_on": tipo_usuario
     }
-
-    def __repr__(self):
-        return f"<Usuario {self.id} - {self.nome}>"

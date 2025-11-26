@@ -97,3 +97,115 @@ def criar_cliente():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+    
+
+
+@cliente_bp.route("/clientes/<int:id>", methods=["DELETE"])
+def deletar_cliente(id):
+    cliente = Cliente.query.get(id)
+
+    if not cliente:
+        return jsonify({"error": "Cliente não encontrado"}), 404
+
+    # 1️⃣ Remover do Firebase (se tiver UID)
+    if cliente.firebase_uid:
+        try:
+            auth.delete_user(cliente.firebase_uid)
+        except Exception as e:
+            return jsonify({
+                "error": f"Erro ao remover do Firebase: {str(e)}"
+            }), 500
+
+    # 2️⃣ Remover do banco (Cliente + Usuario por cascata)
+    try:
+        db.session.delete(cliente)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": f"Erro ao remover cliente no banco: {str(e)}"
+        }), 500
+
+    return jsonify({
+        "message": "Cliente removido completamente (Banco + Firebase)"
+    })
+
+
+# ==============================
+#   ATUALIZAR CLIENTE
+# ==============================
+@cliente_bp.route("/clientes/<int:id>", methods=["PUT"])
+def atualizar_cliente(id):
+    cliente = Cliente.query.get(id)
+
+    if not cliente:
+        return jsonify({"error": "Cliente não encontrado"}), 404
+
+    dados = request.json
+
+    novo_nome = dados.get("nome")
+    novo_email = dados.get("email")
+    novo_telefone = dados.get("telefone")
+    nova_senha = dados.get("senha")
+
+    nova_rua = dados.get("rua")
+    nova_cidade = dados.get("cidade")
+    novo_estado = dados.get("estado")
+    novo_numero = dados.get("numero")
+    novo_cep = dados.get("cep")
+
+    try:
+        # 1️⃣ Atualizar no Firebase (se tiver UID)
+        if cliente.firebase_uid:
+            update_data = {}
+
+            if novo_email:
+                update_data["email"] = novo_email
+
+            if nova_senha:
+                update_data["password"] = nova_senha
+
+            if novo_nome:
+                update_data["display_name"] = novo_nome
+
+            # Firebase só aceita telefone no formato E.164
+            if novo_telefone:
+                update_data["phone_number"] = novo_telefone
+
+            if update_data:
+                auth.update_user(cliente.firebase_uid, **update_data)
+
+        # 2️⃣ Atualizações no banco local (PostgreSQL)
+        if novo_nome:
+            cliente.nome = novo_nome
+
+        if novo_email:
+            cliente.email = novo_email
+
+        if novo_telefone:
+            cliente.telefone = novo_telefone
+
+        if nova_rua:
+            cliente.rua = nova_rua
+
+        if nova_cidade:
+            cliente.cidade = nova_cidade
+
+        if novo_estado:
+            cliente.estado = novo_estado
+
+        if novo_numero:
+            cliente.numero = novo_numero
+
+        if novo_cep:
+            cliente.cep = novo_cep
+
+        cliente.atualizado_em = datetime.now(br_tz)
+
+        db.session.commit()
+
+        return jsonify({"message": "Cliente atualizado com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
