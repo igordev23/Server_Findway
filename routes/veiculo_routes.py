@@ -1,8 +1,12 @@
 from flask import Blueprint, request, jsonify
 from database import db
 from models.veiculo import Veiculo
+from models.localizacao import Localizacao 
 from datetime import datetime
 import pytz
+
+
+
 
 br_tz = pytz.timezone("America/Sao_Paulo")
 veiculo_bp = Blueprint("veiculo_bp", __name__)
@@ -119,3 +123,15 @@ def listar_veiculos_cliente(cliente_id):
         "cliente_id": v.cliente_id,
         "cliente_nome": v.cliente.nome if v.cliente else None
     } for v in veiculos])
+
+@veiculo_bp.route("/veiculo/<placa>", methods=["DELETE"])
+def deletar_veiculo_placa(placa):
+    veiculo = Veiculo.query.filter_by(placa=placa).first()
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    Localizacao.query.filter_by(placa=placa).delete()
+    db.session.delete(veiculo)
+    db.session.commit()
+
+    return jsonify({"message": "Veículo e localizações removidas"})
