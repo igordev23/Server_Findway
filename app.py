@@ -115,6 +115,16 @@ def cliente_configuracoes_seguranca():
     return render_with_firebase("cliente/configuracoes_seguranca.html")
 
 
+@app.route("/perfil")
+def cliente_perfil():
+    return render_with_firebase("cliente/perfil.html")
+
+
+@app.route("/cliente/veiculos")
+def cliente_veiculos():
+    return render_with_firebase("cliente/veiculos.html")
+
+
 # -------- Rotas da experiência administrativa --------
 
 @app.route("/admin/dashboard")

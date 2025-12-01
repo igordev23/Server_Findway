@@ -3,33 +3,31 @@
 {% block title %}Relatórios Operacionais{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4" id="relatorios-app">
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
       <form class="row g-3">
         <div class="col-md-3">
           <label class="form-label">Período</label>
-          <select class="form-select">
-            <option>Diário</option>
-            <option>Semanal</option>
-            <option>Mensal</option>
-            <option>Personalizado</option>
+          <select class="form-select" id="relPeriodo">
+            <option value="diario">Diário</option>
+            <option value="semanal">Semanal</option>
+            <option value="mensal">Mensal</option>
+            <option value="personalizado">Personalizado</option>
           </select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Data inicial</label>
-          <input type="date" class="form-control">
+          <input type="date" class="form-control" id="relDataInicial">
         </div>
         <div class="col-md-3">
           <label class="form-label">Data final</label>
-          <input type="date" class="form-control">
+          <input type="date" class="form-control" id="relDataFinal">
         </div>
         <div class="col-md-3">
           <label class="form-label">Cliente / veículo</label>
-          <select class="form-select">
-            <option>Todos</option>
-            <option>João Silva - Moto ABC1D23</option>
-            <option>Maria Santos - Moto FGH9Z77</option>
+          <select class="form-select" id="relClienteVeiculo">
+            <option value="all">Todos</option>
           </select>
         </div>
         <div class="col-md-6">
@@ -43,10 +41,6 @@
             <label class="form-check-label" for="relatorioIgnicao">Eventos de corte de ignição</label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="relatorioAlertas" checked>
-            <label class="form-check-label" for="relatorioAlertas">Alertas</label>
-          </div>
-          <div class="form-check">
             <input class="form-check-input" type="checkbox" id="relatorioConectividade">
             <label class="form-check-label" for="relatorioConectividade">Conectividade</label>
           </div>
@@ -58,7 +52,7 @@
           <button class="btn btn-outline-secondary" type="button">
             <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar Excel
           </button>
-          <button class="btn btn-primary" type="button">Gerar relatório</button>
+          <button class="btn btn-primary" type="button" id="btnGerarRelatorio">Gerar relatório</button>
         </div>
       </form>
     </div>
@@ -76,25 +70,25 @@
             <div class="col-6">
               <div class="border rounded-3 p-3 text-center">
                 <p class="text-muted mb-1 small">Percursos</p>
-                <h3 class="mb-0">128</h3>
+                <h3 class="mb-0" id="relPercursosValor">0</h3>
               </div>
             </div>
             <div class="col-6">
               <div class="border rounded-3 p-3 text-center">
                 <p class="text-muted mb-1 small">Eventos de corte</p>
-                <h3 class="mb-0 text-danger">14</h3>
+                <h3 class="mb-0 text-danger" id="relCortesValor">0</h3>
               </div>
             </div>
             <div class="col-6">
               <div class="border rounded-3 p-3 text-center">
                 <p class="text-muted mb-1 small">Alertas emitidos</p>
-                <h3 class="mb-0 text-warning">32</h3>
+                <h3 class="mb-0 text-warning" id="relAlertasValor">0</h3>
               </div>
             </div>
             <div class="col-6">
               <div class="border rounded-3 p-3 text-center">
                 <p class="text-muted mb-1 small">Conectividade média</p>
-                <h3 class="mb-0 text-success">97%</h3>
+                <h3 class="mb-0 text-success" id="relConectividadeValor">0%</h3>
               </div>
             </div>
           </div>
@@ -117,26 +111,7 @@
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>19/11/2025</td>
-                <td>Percurso</td>
-                <td>Cliente João • 68km</td>
-                <td><span class="badge text-bg-success">Concluído</span></td>
-              </tr>
-              <tr>
-                <td>19/11/2025</td>
-                <td>Corte</td>
-                <td>Comando remoto app</td>
-                <td><span class="badge text-bg-warning">Pendente</span></td>
-              </tr>
-              <tr>
-                <td>18/11/2025</td>
-                <td>Conectividade</td>
-                <td>Perda > 10 min</td>
-                <td><span class="badge text-bg-danger">Crítico</span></td>
-              </tr>
-            </tbody>
+            <tbody id="relTabelaBody"></tbody>
           </table>
         </div>
       </div>
@@ -145,3 +120,7 @@
 </div>
 {% endblock %}
 
+{% block javascripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='assets/js/services/relatorios.js') }}"></script>
+{% endblock %}

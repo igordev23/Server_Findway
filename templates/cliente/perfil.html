@@ -1,0 +1,67 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Meu Perfil{% endblock %}
+
+{% block content %}
+<div class="container py-4" id="cliente-perfil-app">
+  <div class="row g-4">
+    <div class="col-xl-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-light">
+          <h6 class="mb-0 fw-semibold">Dados da conta</h6>
+        </div>
+        <div class="card-body">
+          <div id="perfil-feedback"></div>
+
+          <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">Nome</dt>
+            <dd class="col-sm-8" id="perfilNome">Carregando...</dd>
+
+            <dt class="col-sm-4 text-muted">E-mail</dt>
+            <dd class="col-sm-8" id="perfilEmail">Carregando...</dd>
+
+            <dt class="col-sm-4 text-muted">Telefone</dt>
+            <dd class="col-sm-8" id="perfilTelefone">-</dd>
+
+            <dt class="col-sm-4 text-muted">Tipo de usuário</dt>
+            <dd class="col-sm-8" id="perfilTipo">-</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-light">
+          <h6 class="mb-0 fw-semibold">Endereço (cliente)</h6>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">Rua</dt>
+            <dd class="col-sm-8" id="perfilRua">-</dd>
+
+            <dt class="col-sm-4 text-muted">Número</dt>
+            <dd class="col-sm-8" id="perfilNumero">-</dd>
+
+            <dt class="col-sm-4 text-muted">Cidade</dt>
+            <dd class="col-sm-8" id="perfilCidade">-</dd>
+
+            <dt class="col-sm-4 text-muted">Estado</dt>
+            <dd class="col-sm-8" id="perfilEstado">-</dd>
+
+            <dt class="col-sm-4 text-muted">CEP</dt>
+            <dd class="col-sm-8" id="perfilCep">-</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='assets/js/services/cliente_perfil.js') }}"></script>
+{% endblock %}
+
+

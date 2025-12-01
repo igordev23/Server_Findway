@@ -3,7 +3,7 @@
 {% block title %}Visão Geral dos Veículos{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4" id="veiculos-ativos-app">
   <div class="row g-4">
     <div class="col-xl-8">
       <div class="card shadow-sm border-0">
@@ -16,7 +16,7 @@
             <div class="d-flex h-100 align-items-center justify-content-center text-muted">
               <div class="text-center px-4">
                 <i class="bi bi-geo-alt text-primary fs-1 mb-3"></i>
-                <p class="mb-1">Todos os veículos serão plotados com ícones conforme status (online/offline/em alerta).</p>
+                <p class="mb-1">Todos os veículos serão plotados com ícones conforme status (online/offline).</p>
                 <small>Integração futura com Google Maps / Mapbox.</small>
               </div>
             </div>
@@ -36,13 +36,10 @@
         <div class="card-body">
           <div class="list-group list-group-flush">
             <div class="list-group-item d-flex justify-content-between">
-              Online <span class="badge text-bg-success">42</span>
+              Online <span class="badge text-bg-success" id="resumoOnline">0</span>
             </div>
             <div class="list-group-item d-flex justify-content-between">
-              Offline <span class="badge text-bg-secondary">5</span>
-            </div>
-            <div class="list-group-item d-flex justify-content-between">
-              Em alerta <span class="badge text-bg-danger">3</span>
+              Offline <span class="badge text-bg-secondary" id="resumoOffline">0</span>
             </div>
           </div>
         </div>
@@ -51,29 +48,7 @@
       <div class="card shadow-sm border-0 mt-4">
         <div class="card-body">
           <h6 class="fw-semibold mb-3">Lista de veículos</h6>
-          <div class="list-group list-group-flush">
-            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-              <span>
-                <strong>João Silva</strong>
-                <small class="d-block text-muted">Moto ABC1D23 • Atualizado há 1m</small>
-              </span>
-              <span class="badge rounded-pill text-bg-success">Online</span>
-            </button>
-            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-              <span>
-                <strong>Maria Santos</strong>
-                <small class="d-block text-muted">Moto XYZ9K88 • Atualizado há 8m</small>
-              </span>
-              <span class="badge rounded-pill text-bg-warning">Alerta</span>
-            </button>
-            <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-              <span>
-                <strong>Frota Demo</strong>
-                <small class="d-block text-muted">Moto TESTE • Offline</small>
-              </span>
-              <span class="badge rounded-pill text-bg-secondary">Offline</span>
-            </button>
-          </div>
+          <div class="list-group list-group-flush" id="listaVeiculosAtivos"></div>
         </div>
       </div>
     </div>
@@ -81,3 +56,7 @@
 </div>
 {% endblock %}
 
+{% block javascripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='assets/js/services/veiculos_ativos.js') }}"></script>
+{% endblock %}
