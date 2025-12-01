@@ -3,7 +3,7 @@
 {% block title %}Configurações de Segurança{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4" id="config-seguranca-app">
   <div class="row g-4">
     <div class="col-xl-6">
       <div class="card shadow-sm border-0 h-100">
@@ -11,21 +11,22 @@
           <h6 class="mb-0 fw-semibold">Alteração de senha</h6>
         </div>
         <div class="card-body">
-          <form>
+          <div id="senha-feedback"></div>
+          <form id="formAlterarSenha">
             <div class="mb-3">
               <label class="form-label">Senha atual</label>
-              <input type="password" class="form-control" placeholder="********">
+              <input id="senhaAtual" type="password" class="form-control" placeholder="********">
             </div>
             <div class="mb-3">
               <label class="form-label">Nova senha</label>
-              <input type="password" class="form-control" placeholder="********">
+              <input id="novaSenha" type="password" class="form-control" placeholder="********">
               <small class="text-muted">Use letras maiúsculas, números e caracteres especiais.</small>
             </div>
             <div class="mb-3">
               <label class="form-label">Confirmar nova senha</label>
-              <input type="password" class="form-control" placeholder="********">
+              <input id="confirmarSenha" type="password" class="form-control" placeholder="********">
             </div>
-            <button class="btn btn-primary" type="button">Atualizar senha</button>
+            <button class="btn btn-primary" type="submit" id="btnAtualizarSenha">Atualizar senha</button>
           </form>
         </div>
       </div>
@@ -137,3 +138,7 @@
 </div>
 {% endblock %}
 
+{% block javascripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='assets/js/services/cliente_configuracoes_seguranca.js') }}"></script>
+{% endblock %}
