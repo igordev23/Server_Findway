@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from database import db
 from models.cliente import Cliente
+from models.veiculo import Veiculo
 from datetime import datetime
 import pytz
 import firebase_admin
@@ -26,6 +27,7 @@ def listar_clientes():
             "id": c.id,
             "nome": c.nome,
             "email": c.email,
+            "telefone": c.telefone,
             "cidade": c.cidade,
             "estado": c.estado,
             "administrador_id": c.administrador_id
@@ -41,8 +43,12 @@ def obter_cliente(id):
         "id": cliente.id,
         "nome": cliente.nome,
         "email": cliente.email,
+        "telefone": cliente.telefone,
+        "rua": cliente.rua,
+        "numero": cliente.numero,
         "cidade": cliente.cidade,
         "estado": cliente.estado,
+        "cep": cliente.cep,
         "administrador_id": cliente.administrador_id
     })
 
@@ -65,8 +71,8 @@ def criar_cliente():
         firebase_user = auth.create_user(
             email=email,
             password=senha,
-            display_name=nome,
-            phone_number=None if telefone == "" else telefone
+            display_name=nome,  
+            phone_number=telefone if telefone else None
         )
 
         # Cria cliente localmente (herança)
@@ -97,7 +103,6 @@ def criar_cliente():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
-    
 
 
 @cliente_bp.route("/clientes/<int:id>", methods=["DELETE"])
@@ -107,17 +112,20 @@ def deletar_cliente(id):
     if not cliente:
         return jsonify({"error": "Cliente não encontrado"}), 404
 
-    # 1️⃣ Remover do Firebase (se tiver UID)
+    firebase_error = None
     if cliente.firebase_uid:
         try:
             auth.delete_user(cliente.firebase_uid)
         except Exception as e:
-            return jsonify({
-                "error": f"Erro ao remover do Firebase: {str(e)}"
-            }), 500
+            firebase_error = str(e)
 
-    # 2️⃣ Remover do banco (Cliente + Usuario por cascata)
     try:
+        # 1️⃣ Remove primeiro todos os veículos vinculados a este cliente
+        veiculos = Veiculo.query.filter_by(cliente_id=id).all()
+        for v in veiculos:
+            db.session.delete(v)
+
+        # 2️⃣ Depois remove o próprio cliente
         db.session.delete(cliente)
         db.session.commit()
     except Exception as e:
@@ -125,6 +133,12 @@ def deletar_cliente(id):
         return jsonify({
             "error": f"Erro ao remover cliente no banco: {str(e)}"
         }), 500
+
+    if firebase_error:
+        return jsonify({
+            "message": "Cliente removido do banco, mas houve erro ao removê-lo do Firebase.",
+            "firebase_error": firebase_error
+        }), 200
 
     return jsonify({
         "message": "Cliente removido completamente (Banco + Firebase)"
@@ -141,7 +155,7 @@ def atualizar_cliente(id):
     if not cliente:
         return jsonify({"error": "Cliente não encontrado"}), 404
 
-    dados = request.json
+    dados = request.json or {}
 
     novo_nome = dados.get("nome")
     novo_email = dados.get("email")
@@ -209,3 +223,26 @@ def atualizar_cliente(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+
+
+@cliente_bp.route("/clientes/<int:id>/veiculos", methods=["GET"])
+def listar_veiculos_por_cliente(id):
+    cliente = Cliente.query.get(id)
+    if not cliente:
+        return jsonify({"error": "Cliente não encontrado"}), 404
+
+    veiculos = Veiculo.query.filter_by(cliente_id=id).all()
+    return jsonify([
+        {
+            "id": v.id,
+            "cliente_id": v.cliente_id,
+            "placa": v.placa,
+            "modelo": v.modelo,
+            "marca": v.marca,
+            "ano": v.ano,
+            "status_ignicao": v.status_ignicao,
+            "ativo": v.ativo,
+            "ultima_atualizacao": v.ultima_atualizacao,
+        }
+        for v in veiculos
+    ])

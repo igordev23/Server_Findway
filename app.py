@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, session
 from config import Config
 from database import db
 from dotenv import load_dotenv
@@ -146,7 +146,6 @@ def admin_monitoramento():
         "admin/monitoramento.html",
         google_maps_api_key=app.config["GOOGLE_MAPS_API_KEY"],
     )
-
 
 if __name__ == "__main__":
     with app.app_context():
