@@ -3,193 +3,176 @@
 {% block title %}Cadastro e Gestão de Clientes{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-  <div class="row g-4">
-    <div class="col-lg-4">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-light">
-          <h6 class="mb-0 fw-semibold">Adicionar cliente</h6>
+<div class="container-fluid py-4" id="clientes-app" data-admin-id="{{ current_admin_id|default('') }}">
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white border-0 py-4">
+      <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+        <div>
         </div>
-        <div class="card-body">
-          <form>
-            <div class="mb-3">
-              <label class="form-label">Nome completo</label>
-              <input type="text" class="form-control" placeholder="Cliente">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">E-mail</label>
-              <input type="email" class="form-control" placeholder="cliente@email.com">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Telefone</label>
-              <input type="text" class="form-control" placeholder="+55 11 99999-9999">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Senha temporária</label>
-              <div class="input-group">
-                <input type="password" class="form-control" placeholder="Senha#123" value="Senha#123">
-                <button class="btn btn-outline-secondary" type="button">Gerar</button>
-              </div>
-              <small class="text-muted">Será enviada ao cliente e poderá ser alterada no primeiro acesso.</small>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Tipo de perfil</label>
-              <select class="form-select">
-                <option>Cliente</option>
-                <option>Operador</option>
-              </select>
-            </div>
-            <div class="border-top pt-3 mt-3">
-              <h6 class="fw-semibold mb-3">Vincular primeiro veículo</h6>
-              <div class="mb-3">
-                <label class="form-label">Placa</label>
-                <input type="text" class="form-control" placeholder="ABC1D23">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Modelo</label>
-                <input type="text" class="form-control" placeholder="Honda CG 160">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">ID do rastreador</label>
-                <input type="text" class="form-control" placeholder="TRACK-001">
-              </div>
-            </div>
-            <button class="btn btn-primary w-100" type="button">Salvar cliente e veículo</button>
-          </form>
+        <div class="d-flex flex-column flex-md-row gap-3 w-100 w-lg-auto">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search"></i>
+            </span>
+            <input id="campo-busca-clientes" type="search" class="form-control border-start-0"
+              placeholder="Buscar nome, e-mail, telefone, cidade ou placa">
+          </div>
+          <button id="btnAbrirModalNovoCliente" class="btn btn-primary d-flex align-items-center justify-content-center">
+            <i class="bi bi-plus-lg me-2"></i>
+          </button>
         </div>
       </div>
     </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Cliente</th>
+            <th>E-mail</th>
+            <th>Telefone</th>
+            <th>Localização</th>
+            <th>Última atualização</th>
+            <th class="text-end">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-clientes">
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              Carregando clientes...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div id="feedback-area"></div>
+</div>
 
-    <div class="col-lg-8">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-          <h6 class="mb-0 fw-semibold">Clientes cadastrados</h6>
-          <div class="input-group input-group-sm" style="max-width: 320px;">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control" placeholder="Buscar por nome, e-mail ou veículo">
+<!-- Modal: novo cliente -->
+<div class="modal fade" id="modalNovoCliente" tabindex="-1" aria-labelledby="modalNovoClienteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <form id="formNovoCliente">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNovoClienteLabel">Adicionar cliente</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Nome completo</label>
+              <input id="novoClienteNome" name="nome" type="text" class="form-control" placeholder="Cliente" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">E-mail</label>
+              <input id="novoClienteEmail" name="email" type="email" class="form-control"
+                placeholder="cliente@email.com" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Telefone</label>
+              <input id="novoClienteTelefone" name="telefone" type="text" class="form-control"
+                placeholder="+55 11 99999-9999" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">CEP</label>
+              <input id="novoClienteCep" name="cep" type="text" class="form-control" placeholder="01234-567" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Rua</label>
+              <input id="novoClienteRua" name="rua" type="text" class="form-control" placeholder="Av. Exemplo, 123"
+                required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Número</label>
+              <input id="novoClienteNumero" name="numero" type="text" class="form-control" placeholder="123" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Estado</label>
+              <input id="novoClienteEstado" name="estado" type="text" class="form-control" placeholder="SP" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Cidade</label>
+              <input id="novoClienteCidade" name="cidade" type="text" class="form-control" placeholder="São Paulo"
+                required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label d-flex align-items-center justify-content-between">
+                Senha temporária
+                <button type="button" class="btn btn-link btn-sm p-0" id="btnGerarSenhaNovoCliente">
+                  Gerar nova
+                </button>
+              </label>
+              <div class="input-group">
+                <input id="novoClienteSenha" name="senha" type="password" class="form-control" required>
+                <button class="btn btn-outline-secondary" type="button" id="btnVerSenhaNovoCliente">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+              <small class="text-muted">Será enviada ao cliente para o primeiro acesso.</small>
+            </div>
           </div>
         </div>
-        <div class="table-responsive">
-          <table class="table align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Cliente</th>
-                <th>Contato</th>
-                <th>Veículos</th>
-                <th>Última atualização</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <strong>João Silva</strong>
-                  <div class="text-muted small">cliente1@email.com</div>
-                </td>
-                <td>+55 11 90000-1111</td>
-                <td>
-                  <span class="badge text-bg-primary">Moto ABC1D23</span>
-                  <span class="badge text-bg-secondary">Tracker 123456</span>
-                </td>
-                <td>Hoje • 09:15</td>
-                <td class="text-end">
-                  <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
-                      data-bs-target="#modalEditarCliente">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
-                      data-bs-target="#modalVincularVeiculo">
-                      <i class="bi bi-link-45deg"></i>
-                    </button>
-                    <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
-                      data-bs-target="#modalRemoverCliente">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>Maria Santos</strong>
-                  <div class="text-muted small">maria@email.com</div>
-                </td>
-                <td>+55 21 95555-0000</td>
-                <td>
-                  <span class="badge text-bg-primary">Moto FGH9Z77</span>
-                </td>
-                <td>Ontem • 18:42</td>
-                <td class="text-end">
-                  <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
-                      data-bs-target="#modalEditarCliente">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
-                      data-bs-target="#modalVincularVeiculo">
-                      <i class="bi bi-link-45deg"></i>
-                    </button>
-                    <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
-                      data-bs-target="#modalRemoverCliente">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar cliente</button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </div>
 
 <!-- Modal: editar cliente -->
-<div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-labelledby="modalEditarClienteLabel" aria-hidden="true">
+<div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-labelledby="modalEditarClienteLabel"
+  aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalEditarClienteLabel">Editar cliente</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <form class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Nome completo</label>
-            <input type="text" class="form-control" value="João Silva">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">E-mail</label>
-            <input type="email" class="form-control" value="cliente1@email.com">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Telefone</label>
-            <input type="text" class="form-control" value="+55 11 90000-1111">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Status</label>
-            <select class="form-select">
-              <option>Ativo</option>
-              <option>Inativo</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Nova senha temporária (opcional)</label>
-            <div class="input-group">
-              <input type="password" class="form-control" placeholder="NovaSenha#2025">
-              <button class="btn btn-outline-secondary" type="button">Gerar</button>
+      <form id="formEditarCliente">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEditarClienteLabel">Editar cliente</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editarClienteId">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Nome completo</label>
+              <input id="editarClienteNome" type="text" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">E-mail</label>
+              <input id="editarClienteEmail" type="email" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Telefone</label>
+              <input id="editarClienteTelefone" type="text" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">CEP</label>
+              <input id="editarClienteCep" type="text" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Rua</label>
+              <input id="editarClienteRua" type="text" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Número</label>
+              <input id="editarClienteNumero" type="text" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Estado</label>
+              <input id="editarClienteEstado" type="text" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Cidade</label>
+              <input id="editarClienteCidade" type="text" class="form-control" required>
             </div>
           </div>
-          <div class="col-12">
-            <label class="form-label">Observações</label>
-            <textarea class="form-control" rows="3" placeholder="Detalhes adicionais"></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary">Salvar alterações</button>
-      </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar alterações</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -204,74 +187,86 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted">
-          Tem certeza de que deseja remover este cliente? Os veículos vinculados também serão desvinculados,
-          porém permanecerão registrados.
+        <input type="hidden" id="removerClienteId">
+        <p class="text-muted mb-0">
+          Esta ação é permanente. O cliente e seus vínculos de veículos serão removidos.
         </p>
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="removerVeiculos">
-          <label class="form-check-label" for="removerVeiculos">
-            Remover veículos associados
-          </label>
-        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-danger">Confirmar remoção</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarRemocaoCliente">Remover cliente</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal: vincular veículo -->
-<div class="modal fade" id="modalVincularVeiculo" tabindex="-1" aria-labelledby="modalVincularVeiculoLabel"
+<!-- Modal: veículos do cliente -->
+<div class="modal fade" id="modalVeiculosCliente" tabindex="-1" aria-labelledby="modalVeiculosClienteLabel"
   aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalVincularVeiculoLabel">Vincular veículo ao cliente</h5>
+        <div>
+          <h5 class="modal-title" id="modalVeiculosClienteLabel">Veículos do cliente</h5>
+          <p class="text-muted small mb-0" id="veiculosClienteResumo"></p>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
-        <form class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Cliente</label>
-            <select class="form-select">
-              <option>João Silva</option>
-              <option>Maria Santos</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Veículo existente</label>
-            <select class="form-select">
-              <option>Novo veículo...</option>
-              <option>Moto ABC1D23</option>
-              <option>Moto FGH9Z77</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Placa</label>
-            <input type="text" class="form-control" placeholder="ABC1D23">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Modelo</label>
-            <input type="text" class="form-control" placeholder="Honda CG 160">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">ID do rastreador</label>
-            <input type="text" class="form-control" placeholder="TRACK-001">
-          </div>
-          <div class="col-12">
-            <label class="form-label">Observações</label>
-            <textarea class="form-control" rows="2" placeholder="Status do veículo, cor, etc."></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary">Salvar vínculo</button>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0 fw-semibold" id="veiculosClienteNome"></h6>
+          <button class="btn btn-outline-primary btn-sm" id="btnAbrirModalCadastrarVeiculo">
+            Cadastrar veículo
+          </button>
+        </div>
+        <div id="listaVeiculosCliente" class="border rounded p-3 bg-light">
+          <p class="text-muted mb-0">Carregando veículos...</p>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal: cadastrar veículo -->
+<div class="modal fade" id="modalCadastrarVeiculo" tabindex="-1" aria-labelledby="modalCadastrarVeiculoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="formCadastrarVeiculo">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalCadastrarVeiculoLabel">Cadastrar veículo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="veiculoClienteId">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Placa</label>
+              <input type="text" class="form-control" id="veiculoPlaca" placeholder="ABC1D23" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Modelo</label>
+              <input type="text" class="form-control" id="veiculoModelo" placeholder="Honda CG 160" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Marca</label>
+              <input type="text" class="form-control" id="veiculoMarca" placeholder="Honda" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Ano</label>
+              <input type="number" class="form-control" id="veiculoAno" placeholder="2024" min="1900" max="2099"
+                required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar veículo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='assets/js/endpoint/cadastroClienteVeiculo.js') }}"></script>
 {% endblock %}
