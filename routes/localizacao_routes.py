@@ -125,3 +125,26 @@ def deletar_localizacoes_24h():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+@localizacao_bp.route("/localizacao/status/<placa>", methods=["GET"])
+def info_completa(placa):
+    # Buscar veículo
+    veiculo = Veiculo.query.filter_by(placa=placa).first()
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    # Buscar última localização
+    localizacao = Localizacao.query.filter_by(placa=placa)\
+        .order_by(Localizacao.timestamp.desc()).first()
+
+    if not localizacao:
+        return jsonify({"error": "Nenhuma localização encontrada"}), 404
+
+    return jsonify({
+        "placa": veiculo.placa,
+        "status_gps": "Online" if veiculo.ativo else "Offline",
+        "velocidade": getattr(localizacao, "velocidade", 0),   # se quiser armazenar isso
+        "latitude": localizacao.latitude,
+        "longitude": localizacao.longitude,
+        "timestamp": localizacao.timestamp.isoformat()
+    })

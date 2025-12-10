@@ -69,7 +69,7 @@ def index():
 def home():
     return render_with_firebase(
         "index.html",
-        google_maps_api_key=app.config["GOOGLE_MAPS_API_KEY"],
+        GOOGLE_MAPS_API_KEY=app.config["GOOGLE_MAPS_API_KEY"],
     )
 
 
@@ -78,27 +78,19 @@ def historico():
     # Mantém a rota antiga apontando para a nova tela de histórico de rotas.
     return render_with_firebase(
         "cliente/historico_rotas.html",
-        google_maps_api_key=app.config["GOOGLE_MAPS_API_KEY"],
+        GOOGLE_MAPS_API_KEY=app.config["GOOGLE_MAPS_API_KEY"],
     )
 
 
 # -------- Rotas da experiência do cliente --------
-
-@app.route("/cliente/tempo-real")
-def cliente_tempo_real():
-    return render_with_firebase(
-        "cliente/tempo_real.html",
-        google_maps_api_key=app.config["GOOGLE_MAPS_API_KEY"],
-    )
 
 
 @app.route("/cliente/historico-rotas")
 def cliente_historico_rotas():
     return render_with_firebase(
         "cliente/historico_rotas.html",
-        google_maps_api_key=app.config["GOOGLE_MAPS_API_KEY"],
+        GOOGLE_MAPS_API_KEY=app.config["GOOGLE_MAPS_API_KEY"],
     )
-
 
 @app.route("/cliente/ignicao")
 def cliente_ignicao():
@@ -136,7 +128,7 @@ def admin_dashboard():
 def admin_veiculos():
     return render_with_firebase(
         "admin/veiculos_ativos.html",
-        google_maps_api_key=app.config["GOOGLE_MAPS_API_KEY"],
+        GOOGLE_MAPS_API_KEY=app.config["GOOGLE_MAPS_API_KEY"],
     )
 
 
@@ -154,7 +146,7 @@ def admin_relatorios():
 def admin_monitoramento():
     return render_with_firebase(
         "admin/monitoramento.html",
-        google_maps_api_key=app.config["GOOGLE_MAPS_API_KEY"],
+        GOOGLE_MAPS_API_KEY=app.config["GOOGLE_MAPS_API_KEY"],
     )
 
 if __name__ == "__main__":

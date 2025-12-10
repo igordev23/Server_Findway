@@ -1,73 +1,71 @@
+
 {% extends "layouts/base.html" %}
-{% block title %}FindWay - Rastreamento em Tempo Real{% endblock %}
+
+{% block title %}Acompanhamento em Tempo Real{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-  <div class="row gx-4 gy-4">
-
-    <!-- 🗺️ Mapa (Ampliado) -->
-    <div class="col-lg-9 col-md-8">
+  <div class="row g-4">
+    <div class="col-lg-8">
       <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white fw-semibold">
-          <i class="bi bi-map-fill me-1"></i> Localização Atual
-        </div>
-        <div class="card-body p-0 position-relative">
-          <div id="map-loading" class="position-absolute top-50 start-50 translate-middle text-center">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-muted small">Carregando mapa...</p>
+        <div class="card-header bg-primary text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-geo-alt me-2"></i>Localização ao vivo</span>
+            <small class="text-white-50">Atualização automática a cada 5 segundos</small>
           </div>
-          <!-- Altura aumentada -->
-          <div id="map" style="height: 620px; border-radius: 0 0 12px 12px;"></div>
+        </div>
+
+        <div class="card-body p-0">
+          <div id="mapaTempoReal" style="height: 520px;" class="w-100 bg-light"></div>
         </div>
       </div>
     </div>
 
-    <!-- ⚙️ Dados em Tempo Real (Reduzidos e mais limpos) -->
-    <div class="col-lg-3 col-md-4">
+    <!-- PAINEL LATERAL -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <h6 class="fw-semibold mb-3">Status do rastreamento</h6>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              Placa
+              <span class="fw-semibold">{{ placa }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              Última atualização
+              <span id="ultima-att" class="badge text-bg-secondary">carregando...</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              Status GPS
+              <span id="status-gps" class="fw-semibold text-muted">carregando...</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              Velocidade atual
+              <span id="velocidade">-- km/h</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
       <div class="card shadow-sm border-0">
-        <div class="card-header bg-success text-white fw-semibold">
-          <i class="bi bi-speedometer2 me-1"></i> Dados em Tempo Real
+        <div class="card-body">
+          <h6 class="fw-semibold mb-3">Últimos eventos</h6>
+          <div id="eventos" class="list-group list-group-flush text-muted">
+            <small>Nenhum evento detectado.</small>
+          </div>
         </div>
-        <div class="card-body py-3 small">
-          <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-geo-alt text-primary me-2"></i>
-            <strong>Latitude:</strong>&nbsp;<span id="lat" class="text-muted">--</span>
-          </div>
-          <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-geo text-primary me-2"></i>
-            <strong>Longitude:</strong>&nbsp;<span id="lng" class="text-muted">--</span>
-          </div>
-          <div class="d-flex align-items-center">
-            <i class="bi bi-clock-history text-secondary me-2"></i>
-            <strong>Atualizado:</strong>&nbsp;<span id="ultima-atualizacao" class="text-muted">--</span>
-          </div>
-          <hr>
-          <button class="btn btn-outline-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#historicoModal">
-            <i class="bi bi-clock-history me-1"></i> Ver histórico 24h
-          </button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- 🕒 Modal Histórico -->
-<div class="modal fade" id="historicoModal" tabindex="-1" aria-labelledby="historicoModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="historicoModalLabel">
-          <i class="bi bi-clock-history me-2"></i> Histórico das Últimas 24h
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <ul id="lista-historico" class="list-group small">
-          <li class="list-group-item">Carregando dados...</li>
-        </ul>
       </div>
     </div>
   </div>
 </div>
+
+
+<!-- GOOGLE MAPS -->
+<script src="{{ url_for('static', filename='assets/js/services/index.js') }}"></script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMapa">
+</script>
+
+
+
 {% endblock %}
