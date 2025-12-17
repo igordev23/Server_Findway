@@ -77,17 +77,59 @@ def localizacao_por_placa(placa):
         return jsonify({"error": "Nenhuma localização encontrada para esta placa"}), 404
     return jsonify(localizacao.to_dict())
 
-# Histórico de 24h por placa
+# Histórico de 24h por placa ou filtro personalizado
 @localizacao_bp.route("/localizacao/<placa>/historico", methods=["GET"])
 def historico_por_placa(placa):
-    cutoff = datetime.utcnow() - timedelta(hours=24)
-    dados = Localizacao.query.filter(
-        Localizacao.placa == placa,
-        Localizacao.timestamp >= cutoff
-    ).order_by(Localizacao.timestamp.desc()).all()
+    # Parâmetros opcionais para filtro
+    data_filtro = request.args.get("data")       # YYYY-MM-DD
+    hora_inicio = request.args.get("inicio")     # HH:MM
+    hora_fim = request.args.get("fim")           # HH:MM
+
+    query = Localizacao.query.filter(Localizacao.placa == placa)
+
+    if data_filtro:
+        try:
+            # Monta horário inicio/fim baseando-se na data
+            # Assumindo horário de Brasília para o input
+            h_ini = hora_inicio if hora_inicio else "00:00"
+            h_fim = hora_fim if hora_fim else "23:59"
+
+            dt_inicio_str = f"{data_filtro} {h_ini}:00"
+            dt_fim_str = f"{data_filtro} {h_fim}:59"
+
+            # Converte string para datetime (naive)
+            dt_inicio_naive = datetime.strptime(dt_inicio_str, "%Y-%m-%d %H:%M:%S")
+            dt_fim_naive = datetime.strptime(dt_fim_str, "%Y-%m-%d %H:%M:%S")
+
+            # Localiza como BR
+            dt_inicio_br = br_tz.localize(dt_inicio_naive)
+            dt_fim_br = br_tz.localize(dt_fim_naive)
+
+            # Converte para UTC (já que o banco parece usar UTC/utcnow)
+            dt_inicio_utc = dt_inicio_br.astimezone(pytz.utc).replace(tzinfo=None)
+            dt_fim_utc = dt_fim_br.astimezone(pytz.utc).replace(tzinfo=None)
+
+            query = query.filter(
+                Localizacao.timestamp >= dt_inicio_utc,
+                Localizacao.timestamp <= dt_fim_utc
+            )
+        except ValueError:
+            return jsonify({"error": "Formato de data/hora inválido"}), 400
+    else:
+        # Padrão: últimas 24h
+        cutoff = datetime.utcnow() - timedelta(hours=24)
+        query = query.filter(Localizacao.timestamp >= cutoff)
+
+    dados = query.order_by(Localizacao.timestamp.desc()).all()
     
+    # Se não encontrar nada
     if not dados:
+        # Se foi filtro específico, retorna lista vazia para não quebrar front
+        if data_filtro:
+            return jsonify([])
+        # Se foi padrão 24h, mantém comportamento antigo de 404 (opcional, mas mantendo compatibilidade)
         return jsonify({"error": "Nenhuma localização encontrada para esta placa nas últimas 24h"}), 404
+
     return jsonify([d.to_dict() for d in dados])
 
 @localizacao_bp.route("/localizacao/<int:id>", methods=["DELETE"])
