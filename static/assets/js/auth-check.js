@@ -30,15 +30,38 @@ document.addEventListener("DOMContentLoaded", () => {
      */
     auth.onAuthStateChanged((user) => {
       if (!user) {
-        // Usuário não autenticado
         if (!isLoginPage) {
-          // Redireciona para login se não estiver na página de login
           window.location.replace("/login?logged_out=1");
         }
       } else {
-        // Usuário autenticado
         if (isLoginPage) {
-          // Redireciona para home se estiver na página de login
+          window.location.replace("/home");
+        }
+        const email = user.email || "";
+        const accessingAdmin = currentPath.startsWith("/admin");
+        if (email) {
+          fetch(`/usuarios/verificar-role?email=${encodeURIComponent(email)}`)
+            .then(r => r.ok ? r.json() : Promise.reject(r))
+            .then(data => {
+              const isAdmin = !!data.is_admin;
+              const adminSection = document.getElementById("adminSection");
+              if (adminSection) {
+                if (isAdmin) {
+                  adminSection.classList.remove("d-none");
+                } else {
+                  adminSection.classList.add("d-none");
+                }
+              }
+              if (accessingAdmin && !isAdmin) {
+                window.location.replace("/home");
+              }
+            })
+            .catch(() => {
+              if (accessingAdmin) {
+                window.location.replace("/home");
+              }
+            });
+        } else if (accessingAdmin) {
           window.location.replace("/home");
         }
       }

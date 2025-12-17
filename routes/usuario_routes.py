@@ -139,3 +139,36 @@ def criar_usuario():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+
+
+# ==============================
+# VERIFICAR PAPEL DO USUÁRIO
+# ==============================
+@usuario_bp.route("/usuarios/verificar-role", methods=["GET"])
+def verificar_role():
+    email = (request.args.get("email") or "").strip().lower()
+    if not email:
+        return jsonify({"error": "Parâmetro 'email' é obrigatório"}), 400
+
+    row = db.session.execute(
+        db.select(
+            Usuario.id,
+            Usuario.email,
+            Usuario.tipo_usuario,
+        ).where(db.func.lower(Usuario.email) == email)
+    ).first()
+
+    if not row:
+        return jsonify({"found": False, "role": None, "is_admin": False}), 404
+
+    tipo = (row[2] or "").lower()
+    if tipo == "admin":
+        tipo = "administrador"
+
+    return jsonify({
+        "found": True,
+        "role": tipo,
+        "is_admin": tipo == "administrador",
+        "user_id": row[0],
+        "email": row[1]
+    })
