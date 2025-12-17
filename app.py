@@ -112,6 +112,26 @@ def cliente_perfil():
     return render_with_firebase("cliente/perfil.html")
 
 
+@app.route("/contatos")
+def contatos():
+    return render_with_firebase("cliente/contatos.html")
+
+
+@app.route("/ajuda")
+def ajuda():
+    return render_with_firebase("cliente/ajuda.html")
+
+
+@app.route("/configuracoes")
+def configuracoes():
+    return render_with_firebase("cliente/configuracoes.html")
+
+
+@app.route("/links-uteis")
+def links_uteis():
+    return render_with_firebase("cliente/links_uteis.html")
+
+
 @app.route("/cliente/veiculos")
 def cliente_veiculos():
     return render_with_firebase("cliente/veiculos.html")
