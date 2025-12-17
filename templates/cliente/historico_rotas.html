@@ -2,6 +2,11 @@
 
 {% block title %}Histórico de Rotas{% endblock %}
 
+{% block javascripts %}
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+<script src="{{ url_for('static', filename='assets/js/services/historico_rotas_cliente.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
   <div class="row g-4">
@@ -9,33 +14,35 @@
       <div class="card shadow-sm border-0">
         <div class="card-body">
           <h5 class="fw-semibold mb-4">Filtrar trajetos</h5>
-          <form>
+          <form id="formFiltro">
             <div class="mb-3">
               <label class="form-label">Selecione a data</label>
-              <input type="date" class="form-control">
+              <input type="date" class="form-control" id="filtroData">
             </div>
             <div class="mb-3">
               <label class="form-label">Intervalo de horário</label>
               <div class="input-group">
-                <input type="time" class="form-control">
+                <input type="time" class="form-control" id="filtroHoraInicio">
                 <span class="input-group-text">até</span>
-                <input type="time" class="form-control">
+                <input type="time" class="form-control" id="filtroHoraFim">
               </div>
             </div>
             <div class="mb-3">
               <label class="form-label">Veículo</label>
-              <select class="form-select">
-                <option>Moto - ABC1D23</option>
-                <option>Moto - FGH4I56</option>
+              <select class="form-select" id="filtroVeiculo">
+                <option value="" disabled selected>Carregando veículos...</option>
               </select>
             </div>
-            <button class="btn btn-primary w-100 mb-3" type="button">Carregar trajeto</button>
+            <div class="d-grid gap-2 mb-3">
+              <button class="btn btn-primary" type="button" id="btnCarregarTrajeto">Carregar trajeto</button>
+              <button class="btn btn-outline-danger" type="button" id="btnLimparFiltro">Limpar filtros</button>
+            </div>
           </form>
           <div class="d-grid gap-2">
-            <button class="btn btn-outline-secondary" type="button">
+            <button class="btn btn-outline-secondary" type="button" id="btnExportarCsv">
               <i class="bi bi-download me-2"></i>Exportar CSV
             </button>
-            <button class="btn btn-outline-secondary" type="button">
+            <button class="btn btn-outline-secondary" type="button" id="btnExportarPdf">
               <i class="bi bi-filetype-pdf me-2"></i>Exportar PDF
             </button>
           </div>
@@ -46,10 +53,10 @@
         <div class="card-body">
           <h6 class="fw-semibold mb-3">Resumo</h6>
           <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between"><span>Distância total</span><span>58 km</span></li>
-            <li class="list-group-item d-flex justify-content-between"><span>Tempo em movimento</span><span>1h 42min</span></li>
-            <li class="list-group-item d-flex justify-content-between"><span>Pontos de parada</span><span>4</span></li>
-            <li class="list-group-item d-flex justify-content-between"><span>Velocidade média</span><span>33 km/h</span></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Distância total</span><span id="statDistancia">-</span></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Tempo em movimento</span><span id="statTempo">-</span></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Pontos de parada</span><span id="statParadas">-</span></li>
+            <li class="list-group-item d-flex justify-content-between"><span>Velocidade média</span><span id="statVelocidade">-</span></li>
           </ul>
         </div>
       </div>

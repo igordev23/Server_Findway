@@ -27,15 +27,36 @@ if not firebase_admin._apps:
 # ==============================
 @usuario_bp.route("/usuarios", methods=["GET"])
 def listar_usuarios():
-    usuarios = Usuario.query.all()
+    # Usa SELECT Core para evitar resolução polimórfica automática,
+    # que falha se houver valores desconhecidos no discriminador.
+    rows = db.session.execute(
+        db.select(
+            Usuario.id,
+            Usuario.nome,
+            Usuario.email,
+            Usuario.telefone,
+            Usuario.tipo_usuario,
+        )
+    ).all()
+
+    # Normaliza valores de tipo_usuario para manter consistência com o mapeamento ORM
+    def normalize_tipo(tipo):
+        if not tipo:
+            return tipo
+        tipo_l = str(tipo).lower()
+        if tipo_l == "admin":
+            return "administrador"
+        return tipo_l
+
     return jsonify([
         {
-            "id": u.id,
-            "nome": u.nome,
-            "email": u.email,
-            "telefone": u.telefone,
-            "tipo_usuario": u.tipo_usuario
-        } for u in usuarios
+            "id": r[0],
+            "nome": r[1],
+            "email": r[2],
+            "telefone": r[3],
+            "tipo_usuario": normalize_tipo(r[4]),
+        }
+        for r in rows
     ])
 
 
