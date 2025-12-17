@@ -13,31 +13,52 @@ veiculo_bp = Blueprint("veiculo_bp", __name__)
 
 @veiculo_bp.route("/veiculos", methods=["GET"])
 def listar_veiculos():
+    agora = datetime.now(br_tz)
+
     veiculos = Veiculo.query.all()
-    return jsonify([{
-        "id": v.id,
-        "placa": v.placa,
-        "modelo": v.modelo,
-        "marca": v.marca,
-        "ano": v.ano,
-        "status_ignicao": v.status_ignicao,
-        "ativo": v.ativo,
-        "cliente_id": v.cliente_id,
-        "cliente_nome": v.cliente.nome if v.cliente else None
-    } for v in veiculos])
+    resposta = []
+
+    for v in veiculos:
+        if v.ultima_atualizacao:
+            delta = agora - v.ultima_atualizacao
+            status_gps = "Online" if delta.total_seconds() <= 7 else "Offline"
+        else:
+            status_gps = "Offline"
+
+        resposta.append({
+            "id": v.id,
+            "placa": v.placa,
+            "modelo": v.modelo,
+            "marca": v.marca,
+            "ano": v.ano,
+            "status_gps": status_gps,        # ✅ correto
+            "ativo": v.ativo,
+            "cliente_id": v.cliente_id,
+            "cliente_nome": v.cliente.nome if v.cliente else None
+        })
+
+    return jsonify(resposta)
 
 @veiculo_bp.route("/veiculos/<int:id>", methods=["GET"])
 def obter_veiculo(id):
     v = Veiculo.query.get(id)
     if not v:
         return jsonify({"error": "Veículo não encontrado"}), 404
+
+    agora = datetime.now(br_tz)
+    if v.ultima_atualizacao:
+        delta = agora - v.ultima_atualizacao
+        status_gps = "Online" if delta.total_seconds() <= 7 else "Offline"
+    else:
+        status_gps = "Offline"
+
     return jsonify({
         "id": v.id,
         "placa": v.placa,
         "modelo": v.modelo,
         "marca": v.marca,
         "ano": v.ano,
-        "status_ignicao": v.status_ignicao,
+        "status_gps": status_gps,   # ✅
         "ativo": v.ativo
     })
 

@@ -35,6 +35,10 @@ def receber_mensagem():
     fuso_brasilia = pytz.timezone("America/Sao_Paulo")
     timestamp_brasilia = datetime.now(fuso_brasilia)
 
+     # Atualiza status do veículo (ONLINE)
+    veiculo.status_ignicao = True
+    veiculo.ultima_atualizacao = timestamp_brasilia
+
     # Criar entrada GPS
     gps_entry = Localizacao(
         placa=placa,
@@ -51,7 +55,8 @@ def receber_mensagem():
             "placa": placa,
             "latitude": lat,
             "longitude": lng,
-            "timestamp": gps_entry.timestamp.isoformat()
+            "timestamp": gps_entry.timestamp.isoformat(),
+            "veiculo_status": "Online"
         }), 201
     except Exception as e:
         db.session.rollback()

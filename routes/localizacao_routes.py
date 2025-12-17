@@ -170,23 +170,30 @@ def deletar_localizacoes_24h():
     
 @localizacao_bp.route("/localizacao/status/<placa>", methods=["GET"])
 def info_completa(placa):
-    # Buscar veículo
     veiculo = Veiculo.query.filter_by(placa=placa).first()
     if not veiculo:
         return jsonify({"error": "Veículo não encontrado"}), 404
 
-    # Buscar última localização
     localizacao = Localizacao.query.filter_by(placa=placa)\
         .order_by(Localizacao.timestamp.desc()).first()
 
     if not localizacao:
         return jsonify({"error": "Nenhuma localização encontrada"}), 404
 
+    agora = datetime.now(br_tz)
+
+    # Segurança extra
+    if not veiculo.ultima_atualizacao:
+        status = "Offline"
+    else:
+        delta = agora - veiculo.ultima_atualizacao
+        status = "Online" if delta.total_seconds() <= 7 else "Offline"
+
     return jsonify({
         "placa": veiculo.placa,
-        "status_gps": "Online" if veiculo.status_ignicao else "Offline",
-        "velocidade": getattr(localizacao, "velocidade", 0),   # se quiser armazenar isso
+        "status_gps": status,
         "latitude": localizacao.latitude,
         "longitude": localizacao.longitude,
-        "timestamp": localizacao.timestamp.isoformat()
+        "timestamp": localizacao.timestamp.isoformat(),
+        "ultima_atualizacao": veiculo.ultima_atualizacao.isoformat() if veiculo.ultima_atualizacao else None
     })
