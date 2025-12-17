@@ -1,0 +1,163 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Gestão de Administradores{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" id="administradores-app">
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white border-0 py-4">
+      <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+        <div>
+          <h5 class="mb-0">Administradores</h5>
+          <small class="text-muted">Gerencie os administradores do sistema</small>
+        </div>
+        <div class="d-flex flex-column flex-md-row gap-3 w-100 w-lg-auto">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search"></i>
+            </span>
+            <input id="campo-busca-admins" type="search" class="form-control border-start-0"
+              placeholder="Buscar por nome ou e-mail">
+          </div>
+          <button id="btnAbrirModalNovoAdmin" class="btn btn-primary d-flex align-items-center justify-content-center">
+            <i class="bi bi-plus-lg me-2"></i> Novo Administrador
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Telefone</th>
+            <th class="text-end">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-admins">
+          <tr>
+            <td colspan="4" class="text-center text-muted py-5">
+              Carregando administradores...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div id="feedback-area"></div>
+</div>
+
+<!-- Modal: novo administrador -->
+<div class="modal fade" id="modalNovoAdmin" tabindex="-1" aria-labelledby="modalNovoAdminLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="formNovoAdmin">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNovoAdminLabel">Adicionar Administrador</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Nome completo</label>
+              <input id="novoAdminNome" name="nome" type="text" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">E-mail</label>
+              <input id="novoAdminEmail" name="email" type="email" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Telefone</label>
+              <input id="novoAdminTelefone" name="telefone" type="text" class="form-control" placeholder="+55 11 99999-9999">
+            </div>
+            <div class="col-12">
+              <label class="form-label d-flex align-items-center justify-content-between">
+                Senha
+                <button type="button" class="btn btn-link btn-sm p-0" id="btnGerarSenhaNovoAdmin">
+                  Gerar
+                </button>
+              </label>
+              <div class="input-group">
+                <input id="novoAdminSenha" name="senha" type="password" class="form-control" required>
+                <button class="btn btn-outline-secondary" type="button" id="btnVerSenhaNovoAdmin">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: editar administrador -->
+<div class="modal fade" id="modalEditarAdmin" tabindex="-1" aria-labelledby="modalEditarAdminLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="formEditarAdmin">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEditarAdminLabel">Editar Administrador</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editarAdminId">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Nome completo</label>
+              <input id="editarAdminNome" type="text" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">E-mail</label>
+              <input id="editarAdminEmail" type="email" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Telefone</label>
+              <input id="editarAdminTelefone" type="text" class="form-control">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Nova Senha (opcional)</label>
+              <input id="editarAdminSenha" type="password" class="form-control" placeholder="Deixe em branco para manter a atual">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: remover administrador -->
+<div class="modal fade" id="modalRemoverAdmin" tabindex="-1" aria-labelledby="modalRemoverAdminLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalRemoverAdminLabel">Remover Administrador</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="removerAdminId">
+        <p class="text-muted mb-0">
+          Esta ação é permanente. O administrador será removido do sistema.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarRemocaoAdmin">Remover</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="{{ url_for('static', filename='assets/js/services/gestao_administradores.js') }}"></script>
+{% endblock %}

@@ -156,11 +156,13 @@ def admin_veiculos():
 def admin_clientes():
     return render_with_firebase("admin/gestao_clientes.html")
 
+@app.route("/admin/administradores")
+def admin_administradores():
+    return render_with_firebase("admin/gestao_administradores.html")
 
 @app.route("/admin/relatorios")
 def admin_relatorios():
     return render_with_firebase("admin/relatorios.html")
-
 
 @app.route("/admin/monitoramento")
 def admin_monitoramento():
