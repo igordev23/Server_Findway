@@ -26,24 +26,38 @@
       <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
           <h6 class="fw-semibold mb-3">Status do rastreamento</h6>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between">
-              Placa
-              <span class="fw-semibold">{{ placa }}</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between">
-              Última atualização
-              <span id="ultima-att" class="badge text-bg-secondary">carregando...</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between">
-              Status GPS
-              <span id="status-gps" class="fw-semibold text-muted">carregando...</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between">
-              Velocidade atual
-              <span id="velocidade">-- km/h</span>
-            </li>
-          </ul>
+          <div class="d-flex justify-content-end mb-2">
+            <button id="btnGeral" class="btn btn-outline-primary btn-sm">Visualizar geral</button>
+          </div>
+          
+          <!-- PAINEL INDIVIDUAL -->
+          <div id="info-individual">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between">
+                Placa
+                <select id="selectPlaca" class="form-select form-select-sm" style="width:auto"></select>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                Última atualização
+                <span id="ultima-att" class="badge text-bg-secondary">carregando...</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                Status GPS
+                <span id="status-gps" class="fw-semibold text-muted">carregando...</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                Marca/Modelo
+                <span id="marca-modelo" class="text-muted">carregando...</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- PAINEL GERAL (LISTA) -->
+          <div id="info-geral" style="display: none;">
+            <div class="list-group list-group-flush" id="listaVeiculosGeral">
+              <small class="text-muted p-2">Carregando lista...</small>
+            </div>
+          </div>
         </div>
       </div>
 

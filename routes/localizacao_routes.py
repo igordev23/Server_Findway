@@ -184,7 +184,7 @@ def info_completa(placa):
 
     return jsonify({
         "placa": veiculo.placa,
-        "status_gps": "Online" if veiculo.ativo else "Offline",
+        "status_gps": "Online" if veiculo.status_ignicao else "Offline",
         "velocidade": getattr(localizacao, "velocidade", 0),   # se quiser armazenar isso
         "latitude": localizacao.latitude,
         "longitude": localizacao.longitude,
