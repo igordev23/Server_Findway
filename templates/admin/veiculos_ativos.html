@@ -30,7 +30,7 @@
         <div class="card-header bg-light">
           <div class="d-flex justify-content-between align-items-center">
             <h6 class="mb-0 fw-semibold">Resumo rápido</h6>
-            <small class="text-muted">Última atualização: 11:45</small>
+            <small class="text-muted" id="lastUpdateText">Última atualização: --:--</small>
           </div>
         </div>
         <div class="card-body">
@@ -58,5 +58,6 @@
 
 {% block javascripts %}
   {{ super() }}
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
   <script src="{{ url_for('static', filename='assets/js/services/veiculos_ativos.js') }}"></script>
 {% endblock %}
