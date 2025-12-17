@@ -1,0 +1,106 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Central de Ajuda{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header de busca -->
+  <div class="row mb-5 justify-content-center text-center">
+    <div class="col-lg-8">
+      <h3 class="fw-bold mb-3">Como podemos ajudar?</h3>
+      <div class="input-group input-group-lg shadow-sm">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control border-start-0" placeholder="Busque por dúvidas, erros ou configurações...">
+        <button class="btn btn-primary" type="button">Buscar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categorias -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 text-center hover-card">
+        <div class="card-body py-4">
+          <div class="mb-3 text-primary"><i class="bi bi-truck fs-1"></i></div>
+          <h5 class="card-title fw-semibold">Rastreamento</h5>
+          <p class="card-text text-muted small">Dúvidas sobre localização em tempo real, histórico e precisão do GPS.</p>
+          <a href="#" class="stretched-link"></a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 text-center hover-card">
+        <div class="card-body py-4">
+          <div class="mb-3 text-success"><i class="bi bi-shield-check fs-1"></i></div>
+          <h5 class="card-title fw-semibold">Segurança</h5>
+          <p class="card-text text-muted small">Configuração de bloqueio, ignição e alertas de movimento.</p>
+          <a href="#" class="stretched-link"></a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 text-center hover-card">
+        <div class="card-body py-4">
+          <div class="mb-3 text-warning"><i class="bi bi-person-gear fs-1"></i></div>
+          <h5 class="card-title fw-semibold">Minha Conta</h5>
+          <p class="card-text text-muted small">Alteração de senha, dados cadastrais e gestão de assinatura.</p>
+          <a href="#" class="stretched-link"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ Accordion -->
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <h5 class="mb-4 fw-semibold"><i class="bi bi-question-circle me-2"></i>Perguntas Frequentes</h5>
+      
+      <div class="accordion shadow-sm" id="accordionFAQ">
+        
+        <!-- Item 1 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+              O rastreador parou de atualizar. O que fazer?
+            </button>
+          </h2>
+          <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+            <div class="accordion-body text-muted">
+              Verifique se o veículo está em uma área com cobertura de sinal GSM/GPRS. Em garagens subterrâneas, é comum a perda de sinal. Caso o problema persista por mais de 24h, entre em contato com o suporte técnico.
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingTwo">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+              Como funciona o bloqueio de ignição?
+            </button>
+          </h2>
+          <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+            <div class="accordion-body text-muted">
+              O bloqueio é enviado remotamente através do painel. Por segurança, o comando pode levar alguns segundos para ser processado e, em alguns modelos, só é efetivado quando o veículo reduz a velocidade.
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingThree">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+              Posso compartilhar o acesso com outra pessoa?
+            </button>
+          </h2>
+          <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+            <div class="accordion-body text-muted">
+              Sim, é possível cadastrar usuários adicionais com permissões limitadas. Acesse a área de "Configurações" > "Gestão de Usuários" para adicionar novos membros.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

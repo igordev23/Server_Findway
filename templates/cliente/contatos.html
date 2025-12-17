@@ -1,0 +1,77 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Contatos{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-telephone-inbound me-2"></i>Canais de Atendimento</h5>
+        </div>
+        <div class="card-body">
+          <p class="text-muted mb-4">
+            Precisa de suporte urgente ou quer tirar dúvidas comerciais? Entre em contato conosco através dos canais abaixo.
+          </p>
+
+          <div class="list-group list-group-flush">
+            <!-- Telefone -->
+            <div class="list-group-item d-flex align-items-center gap-3 py-3">
+              <div class="bg-light p-3 rounded-circle">
+                <i class="bi bi-telephone-fill text-primary fs-4"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">Central de Atendimento 24h</h6>
+                <p class="mb-0 text-muted">0800 123 4567</p>
+              </div>
+              <a href="tel:08001234567" class="btn btn-outline-primary btn-sm">Ligar</a>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="list-group-item d-flex align-items-center gap-3 py-3">
+              <div class="bg-light p-3 rounded-circle">
+                <i class="bi bi-whatsapp text-success fs-4"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">Suporte via WhatsApp</h6>
+                <p class="mb-0 text-muted">(11) 99999-9999</p>
+              </div>
+              <a href="https://wa.me/5511999999999" target="_blank" class="btn btn-outline-success btn-sm">Conversar</a>
+            </div>
+
+            <!-- E-mail -->
+            <div class="list-group-item d-flex align-items-center gap-3 py-3">
+              <div class="bg-light p-3 rounded-circle">
+                <i class="bi bi-envelope-fill text-danger fs-4"></i>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-1">E-mail Comercial</h6>
+                <p class="mb-0 text-muted">contato@findway.com.br</p>
+              </div>
+              <a href="mailto:contato@findway.com.br" class="btn btn-outline-danger btn-sm">Enviar</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Localização -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-geo-alt me-2"></i>Nossa Sede</h6>
+        </div>
+        <div class="card-body">
+          <address class="mb-0 text-muted">
+            <strong>Findway Tecnologia Ltda.</strong><br>
+            Av. Paulista, 1000 - Bela Vista<br>
+            São Paulo, SP - CEP 01310-100<br>
+            <br>
+            <small>Segunda a Sexta, das 09h às 18h</small>
+          </address>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
