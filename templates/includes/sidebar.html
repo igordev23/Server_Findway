@@ -13,7 +13,8 @@
   </div>
 
   <div class="offcanvas-body px-0 d-flex flex-column">
-    <nav class="nav nav-pills flex-column">
+    <!-- MENU CLIENTE -->
+    <nav id="clientMenu" class="nav nav-pills flex-column">
       <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/home">
         <i class="bi bi-speedometer2"></i>
         <span>Home (Cliente)</span>
@@ -36,48 +37,38 @@
       </a>
     </nav>
 
-    <div class="px-4 mt-4 w-100">
-      <div id="adminSection" class="d-none accordion accordion-flush" id="sidebarAdmin">
-        <div class="accordion-item bg-transparent text-dark border-top border-light">
-          <h2 class="accordion-header" id="adminHeading">
-            <button class="accordion-button collapsed bg-transparent text-dark px-0" type="button"
-              data-bs-toggle="collapse" data-bs-target="#adminMenu" aria-expanded="false" aria-controls="adminMenu">
-              <i class="bi bi-shield-lock me-2"></i>
-              Administração
-            </button>
-          </h2>
-          <div id="adminMenu" class="accordion-collapse collapse" aria-labelledby="adminHeading"
-            data-bs-parent="#sidebarAdmin">
-            <div class="accordion-body px-0 pt-0">
-              <a class="d-flex align-items-center gap-2 text-dark-50 py-1" href="/admin/dashboard">
-                <i class="bi bi-columns-gap"></i>
-                <span>Dashboard</span>
-              </a>
-              <a class="d-flex align-items-center gap-2 text-dark-50 py-1" href="/admin/veiculos">
-                <i class="bi bi-truck"></i>
-                <span>Veículos ativos</span>
-              </a>
-              <a class="d-flex align-items-center gap-2 text-dark-50 py-1" href="/admin/monitoramento">
-                <i class="bi bi-activity"></i>
-                <span>Monitoramento</span>
-              </a>
-              <a class="d-flex align-items-center gap-2 text-dark-50 py-1" href="/admin/clientes">
-                <i class="bi bi-people"></i>
-                <span>Clientes & veículos</span>
-              </a>
-               <a class="d-flex align-items-center gap-2 text-dark-50 py-1" href="/admin/administradores">
-                <i class="bi bi-person-badge"></i>
-                <span>Administradores</span>
-              </a>
-              <a class="d-flex align-items-center gap-2 text-dark-50 py-1" href="/admin/relatorios">
-                <i class="bi bi-clipboard-data"></i>
-                <span>Relatórios</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="mt-4">
+    <!-- MENU ADMIN (Inicialmente oculto) -->
+    <nav id="adminMenu" class="nav nav-pills flex-column d-none">
+      <div class="px-4 py-2 text-muted small text-uppercase fw-bold">Administração</div>
+      
+      <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/dashboard">
+        <i class="bi bi-columns-gap"></i>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/veiculos">
+        <i class="bi bi-truck"></i>
+        <span>Veículos ativos</span>
+      </a>
+      <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/monitoramento">
+        <i class="bi bi-activity"></i>
+        <span>Monitoramento</span>
+      </a>
+      <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/clientes">
+        <i class="bi bi-people"></i>
+        <span>Clientes & veículos</span>
+      </a>
+       <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/administradores">
+        <i class="bi bi-person-badge"></i>
+        <span>Administradores</span>
+      </a>
+      <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/relatorios">
+        <i class="bi bi-clipboard-data"></i>
+        <span>Relatórios</span>
+      </a>
+    </nav>
+
+    <div class="mt-4">
+      <div class="px-4">
         <hr class="text-secondary" style="opacity: 0.2;">
         <small class="text-uppercase text-secondary">Links Úteis</small>
         <ul class="nav flex-column mt-3">

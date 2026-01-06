@@ -34,6 +34,21 @@ def listar_clientes():
         } for c in clientes
     ])
 
+@cliente_bp.route("/clientes/admin/<int:admin_id>", methods=["GET"])
+def listar_clientes_por_admin(admin_id):
+    clientes = Cliente.query.filter_by(administrador_id=admin_id).all()
+    return jsonify([
+        {
+            "id": c.id,
+            "nome": c.nome,
+            "email": c.email,
+            "telefone": c.telefone,
+            "cidade": c.cidade,
+            "estado": c.estado,
+            "administrador_id": c.administrador_id
+        } for c in clientes
+    ])
+
 @cliente_bp.route("/clientes/<int:id>", methods=["GET"])
 def obter_cliente(id):
     cliente = Cliente.query.get(id)

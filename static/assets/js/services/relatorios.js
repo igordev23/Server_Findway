@@ -21,14 +21,19 @@ const RelatoriosApi = (() => {
 
   return {
     listClients: () => request("/clientes"),
+    listClientsByAdmin: (adminId) => request(`/clientes/admin/${adminId}`),
     listVehicles: () => request("/veiculos"),
+    listVehiclesByAdmin: (adminId) => request(`/veiculos/admin/${adminId}`),
     listLocationsHistorico: () => request("/localizacao/historico"),
+    listLocationsHistoricoByAdmin: (adminId) => request(`/localizacao/historico/admin/${adminId}`),
     listEventos: () => request("/eventos"),
+    listEventosByAdmin: (adminId) => request(`/eventos/admin/${adminId}`),
   };
 })();
 
 class RelatoriosUI {
   constructor() {
+    this.adminId = null;
     this.state = {
       clients: [],
       vehicles: [],
@@ -162,9 +167,19 @@ class RelatoriosUI {
 
   async gerarRelatorio() {
     try {
+      let locationsPromise, eventosPromise;
+
+      if (this.adminId) {
+        locationsPromise = RelatoriosApi.listLocationsHistoricoByAdmin(this.adminId);
+        eventosPromise = RelatoriosApi.listEventosByAdmin(this.adminId);
+      } else {
+        locationsPromise = RelatoriosApi.listLocationsHistorico();
+        eventosPromise = RelatoriosApi.listEventos();
+      }
+
       const [locations, eventos] = await Promise.all([
-        RelatoriosApi.listLocationsHistorico(),
-        RelatoriosApi.listEventos(),
+        locationsPromise,
+        eventosPromise,
       ]);
 
       this.state.locations = Array.isArray(locations) ? locations : [];

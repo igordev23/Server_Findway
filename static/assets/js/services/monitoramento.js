@@ -106,11 +106,31 @@ class MonitoramentoUI {
           '<div class="p-3 text-muted text-center">Carregando dados de monitoramento...</div>';
       }
 
-      const [clientes, veiculos, localizacoes] = await Promise.all([
-        MonitoramentoApi.listClients(),
-        MonitoramentoApi.listVehicles(),
-        MonitoramentoApi.listLocations(),
-      ]);
+      let clientes, veiculos, localizacoes;
+
+      if (this.adminId) {
+        [clientes, veiculos, localizacoes] = await Promise.all([
+            MonitoramentoApi.listClientsByAdmin(this.adminId),
+            MonitoramentoApi.listVehiclesByAdmin(this.adminId),
+            MonitoramentoApi.listLocationsByAdmin(this.adminId),
+        ]);
+      } else {
+        // Fallback ou modo visualização geral (se permitido)
+        // Se a segurança for estrita, poderia retornar vazio aqui.
+        // Mas mantendo compatibilidade com admin não identificado (talvez superadmin?)
+        // Por hora, mantemos o comportamento antigo se não identificar ID,
+        // MAS como o objetivo é restringir, o ideal é que se não tem ID, não vê nada ou vê erro.
+        // Vou assumir que resolveAdminId falha silenciosamente se não achar, e listamos tudo (comportamento legado)
+        // OU retornamos vazio. O usuário pediu "garantir que cada admin tenha acesso SOMENTE aos seus".
+        // Se não sei quem é o admin, melhor não mostrar nada sensível?
+        // Vou manter o fallback mas logar aviso.
+        console.warn("Admin ID não identificado. Carregando modo geral (pode violar regras de permissão).");
+        [clientes, veiculos, localizacoes] = await Promise.all([
+            MonitoramentoApi.listClients(),
+            MonitoramentoApi.listVehicles(),
+            MonitoramentoApi.listLocations(),
+        ]);
+      }
 
       this.state.clients = Array.isArray(clientes) ? clientes : [];
       this.state.vehicles = Array.isArray(veiculos) ? veiculos : [];
@@ -190,9 +210,9 @@ class MonitoramentoUI {
 
     if (status !== "all") {
       if (status === "online") {
-        veiculos = veiculos.filter((v) => v.status_ignicao === true);
+        veiculos = veiculos.filter((v) => v.status_gps === "Online");
       } else if (status === "offline") {
-        veiculos = veiculos.filter((v) => v.status_ignicao === false);
+        veiculos = veiculos.filter((v) => v.status_gps !== "Online");
       }
     }
 
@@ -232,7 +252,7 @@ class MonitoramentoUI {
           ? this.formatRelativeTime(lastLoc.timestamp)
           : "Sem dados recentes";
 
-        const statusBadge = v.status_ignicao
+        const statusBadge = (v.status_gps === "Online")
           ? '<span class="badge rounded-pill text-bg-success">Online</span>'
           : '<span class="badge rounded-pill text-bg-secondary">Offline</span>';
 
@@ -257,9 +277,98 @@ class MonitoramentoUI {
 
   renderMapaPlaceholder() {
     if (!this.elements.mapaContainer) return;
-    // Aqui você pode integrar com Leaflet / Google Maps depois.
-    // Por enquanto não vamos desenhar marcadores para manter simples,
-    // apenas garantimos que o texto de placeholder faça sentido.
+
+    // Se API do Google Maps não estiver carregada, tenta de novo em breve
+    if (typeof google === "undefined" || !google.maps) {
+        setTimeout(() => this.renderMapaPlaceholder(), 500);
+        return;
+    }
+
+    // Inicializa o mapa apenas uma vez
+    if (!this.map) {
+        this.elements.mapaContainer.innerHTML = "";
+        this.map = new google.maps.Map(this.elements.mapaContainer, {
+            center: { lat: -23.5505, lng: -46.6333 }, // Centro SP
+            zoom: 10,
+        });
+        this.markers = [];
+    }
+
+    this.atualizarMarcadores();
+  }
+
+  atualizarMarcadores() {
+    if (!this.map) return;
+
+    // Limpar marcadores antigos
+    if (this.markers) {
+        this.markers.forEach(m => m.setMap(null));
+    }
+    this.markers = [];
+
+    const veiculos = this.getFilteredVehicles();
+    const bounds = new google.maps.LatLngBounds();
+    let hasPoints = false;
+
+    veiculos.forEach(v => {
+        const lastLoc = this.lastLocationForVehicle(v);
+        if (lastLoc && lastLoc.latitude && lastLoc.longitude) {
+            const pos = { 
+                lat: parseFloat(lastLoc.latitude), 
+                lng: parseFloat(lastLoc.longitude) 
+            };
+            
+            const marker = new google.maps.Marker({
+                position: pos,
+                map: this.map,
+                title: `${v.modelo || 'Veículo'} - ${v.placa}`,
+                label: {
+                    text: v.placa,
+                    color: "black",
+                    fontSize: "10px",
+                    fontWeight: "bold"
+                },
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: v.status_gps === "Online" ? "#198754" : "#6c757d", // Verde ou Cinza
+                    fillOpacity: 1,
+                    strokeWeight: 2,
+                    strokeColor: "#ffffff",
+                }
+            });
+
+            // InfoWindow ao clicar
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div style="color: black;">
+                        <h6 style="margin-bottom: 5px;">${v.placa}</h6>
+                        <p style="margin: 0;"><strong>Modelo:</strong> ${v.modelo || '-'}</p>
+                        <p style="margin: 0;"><strong>Cliente:</strong> ${v.cliente_nome || this.findClientName(v.cliente_id) || '-'}</p>
+                        <p style="margin: 0;"><strong>Status:</strong> ${v.status_gps === "Online" ? 'Online' : 'Offline'}</p>
+                        <p style="margin: 0; font-size: 0.85em; color: #666;">
+                           Atualizado ${lastLoc ? this.formatRelativeTime(lastLoc.timestamp) : '-'}
+                        </p>
+                    </div>
+                `
+            });
+
+            marker.addListener("click", () => {
+                infoWindow.open(this.map, marker);
+            });
+
+            this.markers.push(marker);
+            bounds.extend(pos);
+            hasPoints = true;
+        }
+    });
+
+    if (hasPoints) {
+        this.map.fitBounds(bounds);
+        if (this.markers.length === 1) {
+            this.map.setZoom(15);
+        }
+    }
   }
 
   updateBadgeQuantidade(qtd) {

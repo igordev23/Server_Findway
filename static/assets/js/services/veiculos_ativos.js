@@ -2,8 +2,10 @@ const VeiculosAtivosApi = (() => {
   const defaultHeaders = { "Content-Type": "application/json" };
 
   async function request(url, options = {}) {
+    const separator = url.includes("?") ? "&" : "?";
+    const urlWithCache = `${url}${separator}_t=${Date.now()}`;
     const config = { headers: defaultHeaders, ...options };
-    const response = await fetch(url, config);
+    const response = await fetch(urlWithCache, config);
     let data = null;
     try {
       data = await response.json();
@@ -41,10 +43,35 @@ class VeiculosAtivosUI {
     };
   }
 
-  init() {
+  async init() {
+    await this.resolveAdminId();
     this.loadAll();
     // Atualização periódica simples (30s) – pode ajustar depois se quiser
     setInterval(() => this.loadAll(false), 30000);
+  }
+
+  async resolveAdminId() {
+    if (window.ADMIN_ID) {
+      this.adminId = Number(window.ADMIN_ID);
+      return;
+    }
+    try {
+      const userJson = localStorage.getItem("fw_current_user");
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        if (user.email) {
+          const res = await fetch(
+            `/usuarios/verificar-role?email=${encodeURIComponent(user.email)}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data.is_admin && data.user_id) {
+              this.adminId = Number(data.user_id);
+            }
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   async loadAll(showLoader = true) {
@@ -86,9 +113,9 @@ class VeiculosAtivosUI {
   }
 
   renderResumo() {
-    const online = this.state.vehicles.filter((v) => v.status_ignicao === true)
+    const online = this.state.vehicles.filter((v) => v.status_gps === "Online")
       .length;
-    const offline = this.state.vehicles.filter((v) => v.status_ignicao === false)
+    const offline = this.state.vehicles.filter((v) => v.status_gps !== "Online")
       .length;
 
     if (this.elements.resumoOnline) {
@@ -132,9 +159,15 @@ class VeiculosAtivosUI {
 
         let badgeClass = "text-bg-secondary";
         let badgeText = "Offline";
-        if (v.status_ignicao === true) {
+        // Usa status_gps calculado pelo backend para consistência de conectividade
+        if (v.status_gps === "Online") {
           badgeClass = "text-bg-success";
           badgeText = "Online";
+        } else if (v.status_ignicao === true) {
+            // Fallback se status_gps não vier mas ignição estiver ligada (opcional, mas seguro manter como secundário ou ignorar)
+            // Decisão: Manter estrito ao status_gps para "Online" de conectividade.
+            // Se o usuário quiser ver ignição, deveria ser outro indicador.
+            // Para "Online/Offline" vamos confiar no status_gps.
         }
 
         return `
@@ -244,7 +277,7 @@ class VeiculosAtivosUI {
                 icon: {
                     path: google.maps.SymbolPath.CIRCLE,
                     scale: 10,
-                    fillColor: v.status_ignicao ? "#198754" : "#6c757d", // Verde ou Cinza
+                    fillColor: v.status_gps === "Online" ? "#198754" : "#6c757d", // Verde ou Cinza
                     fillOpacity: 1,
                     strokeWeight: 2,
                     strokeColor: "#ffffff",
@@ -261,7 +294,7 @@ class VeiculosAtivosUI {
                         <h6 style="margin-bottom: 5px;">${v.placa}</h6>
                         <p style="margin: 0;"><strong>Modelo:</strong> ${v.modelo || '-'}</p>
                         <p style="margin: 0;"><strong>Cliente:</strong> ${v.cliente_nome || '-'}</p>
-                        <p style="margin: 0;"><strong>Status:</strong> ${v.status_ignicao ? 'Online' : 'Offline'}</p>
+                        <p style="margin: 0;"><strong>Status:</strong> ${v.status_gps === "Online" ? 'Online' : 'Offline'}</p>
                         <p style="margin: 0; font-size: 0.85em; color: #666;">
                            Atualizado ${this.formatRelativeTime(lastLoc.timestamp)}
                         </p>

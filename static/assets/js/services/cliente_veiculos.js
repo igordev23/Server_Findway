@@ -28,7 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function fetchJson(url) {
-    const res = await fetch(url);
+    const sep = url.includes("?") ? "&" : "?";
+    const res = await fetch(`${url}${sep}_t=${Date.now()}`);
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       const msg = data?.error || `Erro ao chamar ${url}`;
@@ -98,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tbody) {
         tbody.innerHTML = veiculos
           .map((v) => {
-            const statusBadge = v.status_ignicao
+            const statusBadge = (v.status_gps === "Online")
               ? '<span class="badge text-bg-success">Online</span>'
               : '<span class="badge text-bg-secondary">Offline</span>';
             return `

@@ -40,6 +40,7 @@ const ApiService = (() => {
 
   return {
     listClients: () => request('/clientes'),
+    listClientsByAdmin: (adminId) => request(`/clientes/admin/${adminId}`),
     getClient: (id) => request(`/clientes/${id}`),
     createClient: (payload) => request('/clientes', { method: 'POST', body: payload }),
     updateClient: (id, payload) => request(`/clientes/${id}`, { method: 'PUT', body: payload }),
@@ -224,7 +225,10 @@ class ClientesUI {
     this.state.loading = true;
     this.renderClients();
     try {
-      const data = await ApiService.listClients();
+      let data = [];
+      if (this.adminId) {
+        data = await ApiService.listClientsByAdmin(this.adminId);
+      }
       this.state.clients = Array.isArray(data) ? data : [];
       await this.refreshVehicleIndex();
       this.showFeedback('Clientes carregados com sucesso.', 'success', true);

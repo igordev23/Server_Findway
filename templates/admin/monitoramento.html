@@ -72,5 +72,6 @@
 
 {% block javascripts %}
   {{ super() }}
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
   <script src="{{ url_for('static', filename='assets/js/services/monitoramento.js') }}"></script>
 {% endblock %}

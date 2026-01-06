@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from models.localizacao import Localizacao
 from models.veiculo import Veiculo
+from models.cliente import Cliente
 from database import db
 from datetime import datetime, timedelta
 import pytz
@@ -18,16 +19,54 @@ def listar_localizacoes():
         Veiculo, Localizacao.placa == Veiculo.placa
     ).all()
 
-    return jsonify([{
-        "id": loc.Localizacao.id,
-        "placa": loc.Localizacao.placa,
-        "veiculo_id": loc.Veiculo.id,
-        "modelo": loc.Veiculo.modelo,
-        "marca": loc.Veiculo.marca,
-        "latitude": loc.Localizacao.latitude,
-        "longitude": loc.Localizacao.longitude,
-        "timestamp": loc.Localizacao.timestamp.isoformat()
-    } for loc in localizacoes])
+    agora = datetime.now(br_tz)
+    resultado = []
+    for loc in localizacoes:
+        ts = loc.Localizacao.timestamp
+        ts_br = ts.astimezone(br_tz) if ts.tzinfo else pytz.utc.localize(ts).astimezone(br_tz)
+        delta = agora - ts_br
+        status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
+        resultado.append({
+            "id": loc.Localizacao.id,
+            "placa": loc.Localizacao.placa,
+            "veiculo_id": loc.Veiculo.id,
+            "modelo": loc.Veiculo.modelo,
+            "marca": loc.Veiculo.marca,
+            "latitude": loc.Localizacao.latitude,
+            "longitude": loc.Localizacao.longitude,
+            "timestamp": ts_br.isoformat(),
+            "status_gps": status_gps
+        })
+
+    return jsonify(resultado)
+
+# Listar localizações filtradas por cliente
+@localizacao_bp.route("/localizacao/cliente/<int:cliente_id>", methods=["GET"])
+def listar_localizacoes_cliente(cliente_id):
+    localizacoes = db.session.query(Localizacao, Veiculo).join(
+        Veiculo, Localizacao.placa == Veiculo.placa
+    ).filter(Veiculo.cliente_id == cliente_id).all()
+
+    agora = datetime.now(br_tz)
+    resultado = []
+    for loc in localizacoes:
+        ts = loc.Localizacao.timestamp
+        ts_br = ts.astimezone(br_tz) if ts.tzinfo else pytz.utc.localize(ts).astimezone(br_tz)
+        delta = agora - ts_br
+        status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
+        resultado.append({
+            "id": loc.Localizacao.id,
+            "placa": loc.Localizacao.placa,
+            "veiculo_id": loc.Veiculo.id,
+            "modelo": loc.Veiculo.modelo,
+            "marca": loc.Veiculo.marca,
+            "latitude": loc.Localizacao.latitude,
+            "longitude": loc.Localizacao.longitude,
+            "timestamp": ts_br.isoformat(),
+            "status_gps": status_gps
+        })
+
+    return jsonify(resultado)
 
 # Criar uma nova localização para um veículo existente
 @localizacao_bp.route("/localizacao", methods=["POST"])
@@ -42,6 +81,12 @@ def criar_localizacao():
     veiculo = Veiculo.query.filter_by(placa=placa).first()
     if not veiculo:
         return jsonify({"error": "Veículo não encontrado para a placa fornecida"}), 404
+
+    # Atualiza timestamp do veículo para ficar online
+    veiculo.ultima_atualizacao = datetime.now(br_tz)
+    
+    # Força a marcação do objeto como modificado na sessão
+    db.session.add(veiculo)
 
     localizacao = Localizacao(
         placa=placa,
@@ -65,8 +110,37 @@ def criar_localizacao():
 @localizacao_bp.route("/localizacao/historico", methods=["GET"])
 def historico_localizacao():
     cutoff = datetime.utcnow() - timedelta(hours=24)
-    dados = Localizacao.query.filter(Localizacao.timestamp >= cutoff).order_by(Localizacao.timestamp.desc()).all()
-    return jsonify([d.to_dict() for d in dados])
+    dados = db.session.query(Localizacao, Veiculo).join(
+        Veiculo, Localizacao.placa == Veiculo.placa
+    ).filter(Localizacao.timestamp >= cutoff).order_by(Localizacao.timestamp.desc()).all()
+    
+    resultado = []
+    for loc, veiculo in dados:
+        d = loc.to_dict()
+        d['veiculo_id'] = veiculo.id
+        resultado.append(d)
+        
+    return jsonify(resultado)
+
+@localizacao_bp.route("/localizacao/historico/admin/<int:admin_id>", methods=["GET"])
+def historico_localizacao_admin(admin_id):
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    dados = db.session.query(Localizacao, Veiculo).join(
+        Veiculo, Localizacao.placa == Veiculo.placa
+    ).join(
+        Cliente, Veiculo.cliente_id == Cliente.id
+    ).filter(
+        Cliente.administrador_id == admin_id,
+        Localizacao.timestamp >= cutoff
+    ).order_by(Localizacao.timestamp.desc()).all()
+    
+    resultado = []
+    for loc, veiculo in dados:
+        d = loc.to_dict()
+        d['veiculo_id'] = veiculo.id
+        resultado.append(d)
+    
+    return jsonify(resultado)
 
 
 # Localização mais recente por placa
@@ -182,18 +256,23 @@ def info_completa(placa):
 
     agora = datetime.now(br_tz)
 
-    # Segurança extra
-    if not veiculo.ultima_atualizacao:
-        status = "Offline"
+    ts = localizacao.timestamp
+    ts_br = ts.astimezone(br_tz) if ts.tzinfo else pytz.utc.localize(ts).astimezone(br_tz)
+    delta_loc = agora - ts_br
+    if delta_loc.total_seconds() <= 9:
+        status = "Online"
     else:
-        delta = agora - veiculo.ultima_atualizacao
-        status = "Online" if delta.total_seconds() <= 7 else "Offline"
+        if veiculo.ultima_atualizacao:
+            delta = agora - veiculo.ultima_atualizacao
+            status = "Online" if delta.total_seconds() <= 9 else "Offline"
+        else:
+            status = "Offline"
 
     return jsonify({
         "placa": veiculo.placa,
         "status_gps": status,
         "latitude": localizacao.latitude,
         "longitude": localizacao.longitude,
-        "timestamp": localizacao.timestamp.isoformat(),
+        "timestamp": ts_br.isoformat(),
         "ultima_atualizacao": veiculo.ultima_atualizacao.isoformat() if veiculo.ultima_atualizacao else None
     })
