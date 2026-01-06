@@ -44,14 +44,19 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.ok ? r.json() : Promise.reject(r))
             .then(data => {
               const isAdmin = !!data.is_admin;
-              const adminSection = document.getElementById("adminSection");
-              if (adminSection) {
-                if (isAdmin) {
-                  adminSection.classList.remove("d-none");
-                } else {
-                  adminSection.classList.add("d-none");
-                }
+              
+              const adminMenu = document.getElementById("adminMenu");
+              const clientMenu = document.getElementById("clientMenu");
+              
+              // Lógica antiga de adminSection removida em favor dos novos IDs
+              if (isAdmin) {
+                if (adminMenu) adminMenu.classList.remove("d-none");
+                if (clientMenu) clientMenu.classList.add("d-none");
+              } else {
+                if (adminMenu) adminMenu.classList.add("d-none");
+                if (clientMenu) clientMenu.classList.remove("d-none");
               }
+
               if (accessingAdmin && !isAdmin) {
                 window.location.replace("/home");
               }

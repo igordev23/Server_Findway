@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from database import db
 from models.veiculo import Veiculo
+from models.cliente import Cliente
 from models.localizacao import Localizacao 
 from datetime import datetime
 import pytz
@@ -19,11 +20,22 @@ def listar_veiculos():
     resposta = []
 
     for v in veiculos:
-        if v.ultima_atualizacao:
-            delta = agora - v.ultima_atualizacao
-            status_gps = "Online" if delta.total_seconds() <= 7 else "Offline"
+        status_gps = "Offline"
+        loc = Localizacao.query.filter_by(placa=v.placa).order_by(Localizacao.timestamp.desc()).first()
+        if loc and loc.timestamp:
+            ts = loc.timestamp
+            ts_br = ts.astimezone(br_tz) if ts.tzinfo else pytz.utc.localize(ts).astimezone(br_tz)
+            delta_loc = agora - ts_br
+            if delta_loc.total_seconds() <= 9:
+                status_gps = "Online"
+            else:
+                if v.ultima_atualizacao:
+                    delta = agora - v.ultima_atualizacao
+                    status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
         else:
-            status_gps = "Offline"
+            if v.ultima_atualizacao:
+                delta = agora - v.ultima_atualizacao
+                status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
 
         resposta.append({
             "id": v.id,
@@ -39,6 +51,45 @@ def listar_veiculos():
 
     return jsonify(resposta)
 
+@veiculo_bp.route("/veiculos/admin/<int:admin_id>", methods=["GET"])
+def listar_veiculos_por_admin(admin_id):
+    agora = datetime.now(br_tz)
+
+    veiculos = Veiculo.query.join(Cliente).filter(Cliente.administrador_id == admin_id).all()
+    resposta = []
+
+    for v in veiculos:
+        status_gps = "Offline"
+        loc = Localizacao.query.filter_by(placa=v.placa).order_by(Localizacao.timestamp.desc()).first()
+        if loc and loc.timestamp:
+            ts = loc.timestamp
+            ts_br = ts.astimezone(br_tz) if ts.tzinfo else pytz.utc.localize(ts).astimezone(br_tz)
+            delta_loc = agora - ts_br
+            if delta_loc.total_seconds() <= 9:
+                status_gps = "Online"
+            else:
+                if v.ultima_atualizacao:
+                    delta = agora - v.ultima_atualizacao
+                    status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
+        else:
+            if v.ultima_atualizacao:
+                delta = agora - v.ultima_atualizacao
+                status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
+
+        resposta.append({
+            "id": v.id,
+            "placa": v.placa,
+            "modelo": v.modelo,
+            "marca": v.marca,
+            "ano": v.ano,
+            "status_gps": status_gps,
+            "ativo": v.ativo,
+            "cliente_id": v.cliente_id,
+            "cliente_nome": v.cliente.nome if v.cliente else None
+        })
+
+    return jsonify(resposta)
+
 @veiculo_bp.route("/veiculos/<int:id>", methods=["GET"])
 def obter_veiculo(id):
     v = Veiculo.query.get(id)
@@ -46,11 +97,22 @@ def obter_veiculo(id):
         return jsonify({"error": "Veículo não encontrado"}), 404
 
     agora = datetime.now(br_tz)
-    if v.ultima_atualizacao:
-        delta = agora - v.ultima_atualizacao
-        status_gps = "Online" if delta.total_seconds() <= 7 else "Offline"
+    status_gps = "Offline"
+    loc = Localizacao.query.filter_by(placa=v.placa).order_by(Localizacao.timestamp.desc()).first()
+    if loc and loc.timestamp:
+        ts = loc.timestamp
+        ts_br = ts.astimezone(br_tz) if ts.tzinfo else pytz.utc.localize(ts).astimezone(br_tz)
+        delta_loc = agora - ts_br
+        if delta_loc.total_seconds() <= 9:
+            status_gps = "Online"
+        else:
+            if v.ultima_atualizacao:
+                delta = agora - v.ultima_atualizacao
+                status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
     else:
-        status_gps = "Offline"
+        if v.ultima_atualizacao:
+            delta = agora - v.ultima_atualizacao
+            status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
 
     return jsonify({
         "id": v.id,
@@ -130,20 +192,43 @@ def atualizar_veiculo(id):
 # Listar veículos de um cliente específico
 @veiculo_bp.route("/veiculos/cliente/<int:cliente_id>", methods=["GET"])
 def listar_veiculos_cliente(cliente_id):
+    agora = datetime.now(br_tz)
     veiculos = Veiculo.query.filter_by(cliente_id=cliente_id).all()
     if not veiculos:
         return jsonify({"message": "Nenhum veículo encontrado para este cliente"}), 404
-    return jsonify([{
-        "id": v.id,
-        "placa": v.placa,
-        "modelo": v.modelo,
-        "marca": v.marca,
-        "ano": v.ano,
-        "status_ignicao": v.status_ignicao,
-        "ativo": v.ativo,
-        "cliente_id": v.cliente_id,
-        "cliente_nome": v.cliente.nome if v.cliente else None
-    } for v in veiculos])
+    
+    resposta = []
+    for v in veiculos:
+        status_gps = "Offline"
+        loc = Localizacao.query.filter_by(placa=v.placa).order_by(Localizacao.timestamp.desc()).first()
+        if loc and loc.timestamp:
+            ts = loc.timestamp
+            ts_br = ts.astimezone(br_tz) if ts.tzinfo else pytz.utc.localize(ts).astimezone(br_tz)
+            delta_loc = agora - ts_br
+            if delta_loc.total_seconds() <= 9:
+                status_gps = "Online"
+            else:
+                if v.ultima_atualizacao:
+                    delta = agora - v.ultima_atualizacao
+                    status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
+        else:
+            if v.ultima_atualizacao:
+                delta = agora - v.ultima_atualizacao
+                status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
+            
+        resposta.append({
+            "id": v.id,
+            "placa": v.placa,
+            "modelo": v.modelo,
+            "marca": v.marca,
+            "ano": v.ano,
+            "status_gps": status_gps,
+            "status_ignicao": v.status_ignicao,
+            "ativo": v.ativo,
+            "cliente_id": v.cliente_id,
+            "cliente_nome": v.cliente.nome if v.cliente else None
+        })
+    return jsonify(resposta)
 
 @veiculo_bp.route("/veiculo/<placa>", methods=["DELETE"])
 def deletar_veiculo_placa(placa):

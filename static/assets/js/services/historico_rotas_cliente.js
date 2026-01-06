@@ -88,31 +88,28 @@ async function loadVehicles(email) {
     if (!select) return;
     
     try {
-        // 1. Buscar usuário pelo email para obter o ID
-        const resUsers = await fetch("/usuarios"); // Rota usada em outros scripts
-        if (!resUsers.ok) throw new Error("Erro ao buscar usuários");
+        // 1. Buscar usuário pelo email para obter o ID de forma segura
+        const resUser = await fetch(`/usuarios/verificar-role?email=${encodeURIComponent(email)}`);
+        if (!resUser.ok) throw new Error("Erro ao buscar usuário");
         
-        const users = await resUsers.json();
-        const user = users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
-        
-        if (!user) {
+        const userData = await resUser.json();
+        if (!userData.found || !userData.user_id) {
             select.innerHTML = '<option disabled selected>Usuário não encontrado no sistema</option>';
             return;
         }
 
+        const userId = userData.user_id;
+
         // 2. Buscar veículos do cliente
-        const resVehicles = await fetch(`/veiculos/cliente/${user.id}`);
+        const resVehicles = await fetch(`/veiculos/cliente/${userId}`);
         let vehicles = [];
         
         if (resVehicles.ok) {
             vehicles = await resVehicles.json();
         } else {
-            // Fallback: tentar rota geral e filtrar
-            const resAll = await fetch("/veiculos");
-            if (resAll.ok) {
-                const all = await resAll.json();
-                vehicles = all.filter(v => v.cliente_id === user.id);
-            }
+            // Fallback removido por segurança: não listar todos os veículos
+             select.innerHTML = '<option disabled selected>Erro ao carregar veículos</option>';
+             return;
         }
 
         if (!vehicles || vehicles.length === 0) {

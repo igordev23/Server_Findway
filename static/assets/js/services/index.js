@@ -2,6 +2,7 @@ let ui;
 
 class TempoRealUI {
     constructor() {
+        this._bust = (u) => u + (u.includes("?") ? "&" : "?") + "_t=" + Date.now();
         this.map = null;
         this.marker = null;
         this.markers = [];
@@ -91,8 +92,8 @@ class TempoRealUI {
         }
 
         const html = this.vehicles.map(v => {
-            const statusColor = v.status_ignicao ? "text-success" : "text-secondary";
-            const statusText = v.status_ignicao ? "Online" : "Offline";
+            const statusColor = v.status_gps === "Online" ? "text-success" : "text-secondary";
+            const statusText = v.status_gps === "Online" ? "Online" : "Offline";
             return `
                 <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
                     onclick="ui.selectFromList('${v.id}')">
@@ -125,22 +126,41 @@ class TempoRealUI {
                 email = u.email || null;
             } catch (_) {}
             let userId = null;
+            let adminId = null;
             if (email) {
-                const usersRes = await fetch("/usuarios");
-                const users = await usersRes.json();
-                const me = Array.isArray(users) ? users.find(u => u.email === email && u.tipo_usuario === "cliente") : null;
-                userId = me ? me.id : null;
+                try {
+                    const roleRes = await fetch(this._bust(`/usuarios/verificar-role?email=${encodeURIComponent(email)}`));
+                    if (roleRes.ok) {
+                        const roleData = await roleRes.json();
+                        if (roleData.found) {
+                            if (roleData.role === "cliente") {
+                                userId = roleData.user_id;
+                            } else if (roleData.role === "administrador" || roleData.role === "admin") {
+                                adminId = roleData.user_id;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Erro ao verificar role do usuário:", e);
+                }
             }
             let res;
             if (userId) {
-                res = await fetch(`/veiculos/cliente/${userId}`);
+                res = await fetch(this._bust(`/veiculos/cliente/${userId}`));
+                if (res.status === 404) {
+                    this.vehicles = [];
+                } else {
+                    this.vehicles = await res.json();
+                }
+            } else if (adminId) {
+                res = await fetch(this._bust(`/veiculos/admin/${adminId}`));
                 if (res.status === 404) {
                     this.vehicles = [];
                 } else {
                     this.vehicles = await res.json();
                 }
             } else {
-                const all = await fetch("/veiculos");
+                const all = await fetch(this._bust("/veiculos"));
                 this.vehicles = await all.json();
             }
             this.updateSelect();
@@ -180,7 +200,7 @@ class TempoRealUI {
             return;
         }
         try {
-            const sres = await fetch(`/localizacao/status/${this.currentVehicle.placa}`);
+            const sres = await fetch(this._bust(`/localizacao/status/${this.currentVehicle.placa}`));
             if (!sres.ok) throw new Error();
             const st = await sres.json();
             const lat = parseFloat(st.latitude);
@@ -212,7 +232,7 @@ class TempoRealUI {
 
     async updateEventsFor(veiculoId) {
         try {
-            const er = await fetch("/eventos");
+            const er = await fetch(this._bust("/eventos"));
             const all = await er.json();
             const list = Array.isArray(all) ? all.filter(e => String(e.veiculo_id) === String(veiculoId)) : [];
             if (!this.eventsEl) return;
@@ -233,7 +253,9 @@ class TempoRealUI {
     async renderGeneral() {
         try {
             this.clearMarkers();
-            const lr = await fetch("/localizacao");
+            // Se for cliente logado, busca apenas localizações dele
+            const url = this.userId ? `/localizacao/cliente/${this.userId}` : "/localizacao";
+            const lr = await fetch(this._bust(url));
             const locs = await lr.json();
             const latestByVehicle = {};
             if (Array.isArray(locs)) {
@@ -254,7 +276,8 @@ class TempoRealUI {
                     map: this.map,
                     title: v ? `${v.placa}` : `${l.placa}`
                 });
-                const status = v && v.status_ignicao ? "Online" : "Offline";
+                // Prioriza status do backend para consistência
+                const status = l.status_gps ? l.status_gps : ((Date.now() - new Date(l.timestamp).getTime()) <= 9000 ? "Online" : "Offline");
                 const dt = new Date(l.timestamp);
                 const content = `<div style="color:black"><h6 style="margin-bottom:4px">${v ? v.placa : l.placa}</h6><div>${v ? (v.marca || "-") : (l.marca || "-")} / ${v ? (v.modelo || "-") : (l.modelo || "-")}</div><div>${status}</div><div>Atualizado ${this.relativeTime(dt)}</div></div>`;
                 const iw = new google.maps.InfoWindow({ content });
