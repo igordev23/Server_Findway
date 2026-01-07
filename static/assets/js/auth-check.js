@@ -34,11 +34,21 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.replace("/login?logged_out=1");
         }
       } else {
+        user.getIdToken().then((token) => {
+          document.cookie = `firebase_token=${token}; path=/; max-age=3600`;
+        }).catch(() => {});
+        auth.onIdTokenChanged(async (u) => {
+          if (u) {
+            try {
+              const t = await u.getIdToken();
+              document.cookie = `firebase_token=${t}; path=/; max-age=3600`;
+            } catch (_) {}
+          }
+        });
         if (isLoginPage) {
           window.location.replace("/home");
         }
         const email = user.email || "";
-        const accessingAdmin = currentPath.startsWith("/admin");
         if (email) {
           fetch(`/usuarios/verificar-role?email=${encodeURIComponent(email)}`)
             .then(r => r.ok ? r.json() : Promise.reject(r))
@@ -48,26 +58,23 @@ document.addEventListener("DOMContentLoaded", () => {
               const adminMenu = document.getElementById("adminMenu");
               const clientMenu = document.getElementById("clientMenu");
               
-              // Lógica antiga de adminSection removida em favor dos novos IDs
+              // Lógica de controle de acesso e menus
               if (isAdmin) {
                 if (adminMenu) adminMenu.classList.remove("d-none");
                 if (clientMenu) clientMenu.classList.add("d-none");
               } else {
                 if (adminMenu) adminMenu.classList.add("d-none");
                 if (clientMenu) clientMenu.classList.remove("d-none");
-              }
-
-              if (accessingAdmin && !isAdmin) {
-                window.location.replace("/home");
+                
+                // Bloqueia acesso a páginas de admin para não-admins
+                if (window.location.pathname.startsWith("/admin")) {
+                   window.location.replace("/home");
+                }
               }
             })
             .catch(() => {
-              if (accessingAdmin) {
-                window.location.replace("/home");
-              }
+              // Removido redirecionamento para permitir acesso a todos
             });
-        } else if (accessingAdmin) {
-          window.location.replace("/home");
         }
       }
     });
@@ -91,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
         try {
           await auth.signOut();
-          localStorage.removeItem("token");
+          document.cookie = "firebase_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
           window.location.replace("/login?logged_out=1");
         } catch (error) {
           console.error("Erro ao fazer logout:", error);
@@ -100,6 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
   } catch (error) {
-    console.error("Erro ao inicializar verificação de autenticação:", error);
+    console.error("Erro ao inicializar Firebase:", error);
   }
 });

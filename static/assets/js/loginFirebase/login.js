@@ -16,7 +16,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const senha = senhaInput.value.trim();
 
     try {
-      await auth.signInWithEmailAndPassword(email, senha);
+      const result = await auth.signInWithEmailAndPassword(email, senha);
+      
+      // Armazena o token em um cookie para o backend poder ler
+      const token = await result.user.getIdToken();
+      document.cookie = `firebase_token=${token}; path=/; max-age=3600`;
+      
       window.location.href = "/home"; // redirecionamento pós-login
     } catch (error) {
       erroMsg.textContent = "Erro ao fazer login: " + error.message;
@@ -32,8 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const cfg = JSON.parse(firebaseConfigEl.textContent);
         if (!firebase.apps.length) firebase.initializeApp(cfg);
         const auth = firebase.auth();
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
           if (user) {
+            // Armazena o token em um cookie para o backend poder ler
+            const token = await user.getIdToken();
+            document.cookie = `firebase_token=${token}; path=/; max-age=3600`;
+            
             window.location.replace('/home');
           }
         });

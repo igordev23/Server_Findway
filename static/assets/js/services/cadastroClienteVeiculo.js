@@ -32,6 +32,10 @@ const ApiService = (() => {
       const error = new Error(data?.error || defaultMessage);
       error.status = response.status;
       error.payload = data;
+      if (response.status === 403) {
+        window.location.replace('/pagamento-pendente');
+        return;
+      }
       throw error;
     }
 
@@ -47,6 +51,7 @@ const ApiService = (() => {
     deleteClient: (id) => request(`/clientes/${id}`, { method: 'DELETE' }),
     listClientVehicles: (id) => request(`/clientes/${id}/veiculos`),
     listVehicles: () => request('/veiculos'),
+    listVehiclesByAdmin: (adminId) => request(`/veiculos/admin/${adminId}`),
     createVehicle: (payload) => request('/veiculos', { method: 'POST', body: payload }),
     listAdministradores: () => request('/administradores')
   };
@@ -243,7 +248,13 @@ class ClientesUI {
 
   async refreshVehicleIndex() {
     try {
-      const vehicles = await ApiService.listVehicles();
+      let vehicles = [];
+      if (this.adminId) {
+          vehicles = await ApiService.listVehiclesByAdmin(this.adminId);
+      } else {
+          vehicles = await ApiService.listVehicles();
+      }
+
       if (!Array.isArray(vehicles)) {
         return;
       }
@@ -537,7 +548,6 @@ class ClientesUI {
     } catch (error) {
       this.showFeedback(error.message || 'Erro ao cadastrar veículo.', 'danger');
     } finally {
-      submitButton.disabled = false;
       submitButton.textContent = 'Salvar veículo';
     }
   }
@@ -562,6 +572,32 @@ class ClientesUI {
       return null;
     }
     payload.administrador_id = this.adminId;
+
+    // Adicionar campos de pagamento apenas no formulário novo
+    if (form.id === 'formNovoCliente') {
+      const planoNome = document.getElementById('novoClientePlanoNome')?.value?.trim();
+      const planoValor = document.getElementById('novoClientePlanoValor')?.value?.trim();
+      const diaPagamento = document.getElementById('novoClienteDiaPagamento')?.value?.trim();
+
+      if (!planoNome || !planoValor || !diaPagamento) {
+        this.showFeedback('Preencha todos os campos de pagamento (nome do plano, valor e dia de pagamento).', 'warning');
+        return null;
+      }
+
+      payload.plano_nome = planoNome;
+      payload.plano_valor = parseFloat(planoValor);
+      payload.dia_pagamento = parseInt(diaPagamento);
+
+      if (payload.plano_valor <= 0) {
+        this.showFeedback('Valor do plano deve ser maior que zero.', 'warning');
+        return null;
+      }
+
+      if (payload.dia_pagamento < 1 || payload.dia_pagamento > 31) {
+        this.showFeedback('Dia de pagamento deve estar entre 1 e 31.', 'warning');
+        return null;
+      }
+    }
 
     if (includePassword) {
       payload.senha = document.getElementById('novoClienteSenha')?.value || '';

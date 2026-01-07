@@ -7,6 +7,7 @@ import pytz
 import firebase_admin
 from firebase_admin import credentials, auth
 import os
+import middlewares
 
 cliente_bp = Blueprint("cliente_bp", __name__)
 br_tz = pytz.timezone("America/Sao_Paulo")
@@ -30,7 +31,9 @@ def listar_clientes():
             "telefone": c.telefone,
             "cidade": c.cidade,
             "estado": c.estado,
-            "administrador_id": c.administrador_id
+            "administrador_id": c.administrador_id,
+             "stripe_customer_id": getattr(c, "stripe_customer_id", None),
+            "subscription_status": getattr(c, "subscription_status", None),
         } for c in clientes
     ])
 

@@ -405,5 +405,3 @@ document.addEventListener("DOMContentLoaded", () => {
   const ui = new MonitoramentoUI();
   ui.init();
 });
-
-

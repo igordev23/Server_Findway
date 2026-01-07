@@ -12,6 +12,9 @@ from routes.cliente_routes import cliente_bp
 from routes.veiculo_routes import veiculo_bp
 from routes.evento_routes import evento_bp
 from routes.usuario_routes import usuario_bp
+from routes.payments_routes import payments_bp
+from routes.admin_payment_routes import admin_bp
+from middlewares import check_payment_status
 
 load_dotenv()
 
@@ -29,6 +32,8 @@ app.register_blueprint(cliente_bp)
 app.register_blueprint(veiculo_bp)
 app.register_blueprint(evento_bp)
 app.register_blueprint(usuario_bp)
+app.register_blueprint(payments_bp)
+app.register_blueprint(admin_bp)
 
 
 def get_firebase_config():
@@ -66,7 +71,9 @@ def index():
 
 
 @app.route("/home")
+@check_payment_status
 def home():
+    print("[DEBUG] Rota /home chamada")
     return render_with_firebase(
         "index.html",
         GOOGLE_MAPS_API_KEY=app.config["GOOGLE_MAPS_API_KEY"],
@@ -74,6 +81,7 @@ def home():
 
 
 @app.route("/historico")
+@check_payment_status
 def historico():
     # Mantém a rota antiga apontando para a nova tela de histórico de rotas.
     return render_with_firebase(
@@ -86,6 +94,7 @@ def historico():
 
 
 @app.route("/cliente/historico-rotas")
+@check_payment_status
 def cliente_historico_rotas():
     return render_with_firebase(
         "cliente/historico_rotas.html",
@@ -160,6 +169,10 @@ def admin_clientes():
 def admin_administradores():
     return render_with_firebase("admin/gestao_administradores.html")
 
+@app.route("/admin/financeiro")
+def admin_financeiro():
+    return render_with_firebase("admin/financeiro.html")
+
 @app.route("/admin/relatorios")
 def admin_relatorios():
     return render_with_firebase("admin/relatorios.html")
@@ -170,6 +183,20 @@ def admin_monitoramento():
         "admin/monitoramento.html",
         GOOGLE_MAPS_API_KEY=app.config["GOOGLE_MAPS_API_KEY"],
     )
+
+
+@app.route("/pagamento-pendente")
+def pagamento_pendente():
+    return render_with_firebase(
+        "cliente/pagamento_pendente.html",
+        STRIPE_DEFAULT_PRICE_ID=os.getenv("STRIPE_DEFAULT_PRICE_ID")
+    )
+
+
+@app.route("/criar-auth-temp")
+def criar_auth_temp():
+    return render_template("criar_auth.html", firebase_config=get_firebase_config())
+
 
 if __name__ == "__main__":
     with app.app_context():

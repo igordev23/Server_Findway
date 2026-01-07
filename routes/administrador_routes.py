@@ -6,6 +6,7 @@ import pytz
 import firebase_admin
 from firebase_admin import credentials, auth
 import os
+import middlewares
 
 administrador_bp = Blueprint("administrador_bp", __name__)
 br_tz = pytz.timezone("America/Sao_Paulo")

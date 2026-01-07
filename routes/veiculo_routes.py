@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from middlewares import check_subscription_status
 from database import db
 from models.veiculo import Veiculo
 from models.cliente import Cliente
@@ -13,6 +14,7 @@ br_tz = pytz.timezone("America/Sao_Paulo")
 veiculo_bp = Blueprint("veiculo_bp", __name__)
 
 @veiculo_bp.route("/veiculos", methods=["GET"])
+@check_subscription_status
 def listar_veiculos():
     agora = datetime.now(br_tz)
 
@@ -91,6 +93,7 @@ def listar_veiculos_por_admin(admin_id):
     return jsonify(resposta)
 
 @veiculo_bp.route("/veiculos/<int:id>", methods=["GET"])
+@check_subscription_status
 def obter_veiculo(id):
     v = Veiculo.query.get(id)
     if not v:
@@ -191,6 +194,7 @@ def atualizar_veiculo(id):
     
 # Listar veículos de um cliente específico
 @veiculo_bp.route("/veiculos/cliente/<int:cliente_id>", methods=["GET"])
+@check_subscription_status
 def listar_veiculos_cliente(cliente_id):
     agora = datetime.now(br_tz)
     veiculos = Veiculo.query.filter_by(cliente_id=cliente_id).all()

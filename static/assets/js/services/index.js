@@ -9,7 +9,6 @@ class TempoRealUI {
         this.generalMode = false;
         this.vehicles = [];
         this.currentVehicle = null;
-        this.lastLocations = [];
         this.selectEl = document.getElementById("selectPlaca");
         this.lastUpdateEl = document.getElementById("ultima-att");
         this.statusEl = document.getElementById("status-gps");
@@ -26,11 +25,14 @@ class TempoRealUI {
         await this.loadVehiclesForCurrentUser();
         this.setupHandlers();
         this.renderInitialSelection();
+        this.checkPaymentSuccess(); // Adicionado verificação de pagamento
         this.loop();
     }
 
     initMap() {
-        this.map = new google.maps.Map(document.getElementById("mapaTempoReal"), {
+        const el = document.getElementById("mapaTempoReal");
+        if (!el) return;
+        this.map = new google.maps.Map(el, {
             center: { lat: -23.5, lng: -46.6 },
             zoom: 13
         });
@@ -41,80 +43,27 @@ class TempoRealUI {
         });
     }
 
-    setupHandlers() {
-        if (this.selectEl) {
-            this.selectEl.addEventListener("change", () => {
-                const id = this.selectEl.value;
-                this.currentVehicle = this.vehicles.find(v => String(v.id) === String(id)) || null;
-                // Se mudar select enquanto estiver em geral, volta para individual?
-                // Normalmente sim, o usuário quer ver aquele carro.
-                if (this.generalMode) {
-                    this.toggleMode(false);
-                } else {
-                    this.updateSingleView();
-                }
-            });
-        }
-        if (this.btnGeral) {
-            this.btnGeral.addEventListener("click", () => {
-                this.toggleMode(!this.generalMode);
-            });
-        }
-    }
+    // Função de verificação de pagamento reintegrada
+    checkPaymentSuccess() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("payment") === "success") {
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({path:newUrl}, '', newUrl);
 
-    toggleMode(isGeneral) {
-        this.generalMode = isGeneral;
-        
-        if (this.generalMode) {
-            this.btnGeral.textContent = "Visualizar por placa";
-            this.btnGeral.classList.add("active");
-            if (this.panelIndividual) this.panelIndividual.style.display = "none";
-            if (this.panelGeneral) this.panelGeneral.style.display = "block";
-            
-            this.clearSidePanel(); // Opcional, limpa dados antigos
-            this.renderGeneral();
-            this.renderVehicleList(); // Renderiza a lista lateral
-        } else {
-            this.btnGeral.textContent = "Visualizar geral";
-            this.btnGeral.classList.remove("active");
-            if (this.panelIndividual) this.panelIndividual.style.display = "block";
-            if (this.panelGeneral) this.panelGeneral.style.display = "none";
-            
-            this.updateSingleView();
-        }
-    }
-
-    renderVehicleList() {
-        if (!this.listGeneral) return;
-        if (!this.vehicles.length) {
-            this.listGeneral.innerHTML = '<div class="p-3 text-muted text-center">Nenhum veículo encontrado.</div>';
-            return;
-        }
-
-        const html = this.vehicles.map(v => {
-            const statusColor = v.status_gps === "Online" ? "text-success" : "text-secondary";
-            const statusText = v.status_gps === "Online" ? "Online" : "Offline";
-            return `
-                <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                    onclick="ui.selectFromList('${v.id}')">
-                    <span>
-                        <strong>${v.placa}</strong>
-                        <small class="d-block text-muted">${v.modelo || ""}</small>
-                    </span>
-                    <span class="badge bg-light ${statusColor}">${statusText}</span>
-                </button>
+            const alertDiv = document.createElement("div");
+            alertDiv.className = "alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x m-3 shadow";
+            alertDiv.style.zIndex = "9999";
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Pagamento realizado com sucesso!</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             `;
-        }).join("");
-        this.listGeneral.innerHTML = html;
-    }
-
-    selectFromList(vehicleId) {
-        // Ao clicar num item da lista geral, volta para o modo individual focando naquele carro
-        if (this.selectEl) {
-            this.selectEl.value = vehicleId;
-            // Dispara evento change manualmente ou chama logica
-            this.currentVehicle = this.vehicles.find(v => String(v.id) === String(vehicleId));
-            this.toggleMode(false);
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.classList.remove("show");
+                setTimeout(() => alertDiv.remove(), 150);
+            }, 5000);
         }
     }
 
@@ -176,6 +125,23 @@ class TempoRealUI {
         this.selectEl.innerHTML = options;
     }
 
+    setupHandlers() {
+        if (this.selectEl) {
+            this.selectEl.addEventListener("change", () => {
+                const id = this.selectEl.value;
+                this.currentVehicle = this.vehicles.find(v => String(v.id) === String(id)) || null;
+                if (!this.generalMode) {
+                    this.updateSingleView();
+                }
+            });
+        }
+        if (this.btnGeral) {
+            this.btnGeral.addEventListener("click", () => {
+                this.toggleMode(!this.generalMode);
+            });
+        }
+    }
+
     renderInitialSelection() {
         if (!this.vehicles.length) {
             this.clearSidePanel();
@@ -186,6 +152,66 @@ class TempoRealUI {
         this.currentVehicle = first;
         this.updateSingleView();
     }
+    
+    toggleMode(isGeneral) {
+        this.generalMode = isGeneral;
+        if (this.generalMode) {
+            if (this.btnGeral) {
+                this.btnGeral.textContent = "Visualizar por placa";
+                this.btnGeral.classList.add("active");
+            }
+            if (this.panelIndividual) this.panelIndividual.style.display = "none";
+            if (this.panelGeneral) this.panelGeneral.style.display = "block";
+            this.renderGeneral();
+            this.renderVehicleList();
+        } else {
+            if (this.btnGeral) {
+                this.btnGeral.textContent = "Visualizar geral";
+                this.btnGeral.classList.remove("active");
+            }
+            if (this.panelIndividual) this.panelIndividual.style.display = "block";
+            if (this.panelGeneral) this.panelGeneral.style.display = "none";
+            this.updateSingleView();
+        }
+    }
+
+    renderVehicleList() {
+        if (!this.listGeneral) return;
+        if (!this.vehicles.length) {
+            this.listGeneral.innerHTML = '<div class="p-3 text-muted text-center">Nenhum veículo encontrado.</div>';
+            return;
+        }
+
+        const html = this.vehicles.map(v => {
+            const statusColor = v.status_gps === "Online" ? "text-success" : "text-secondary";
+            const statusText = v.status_gps === "Online" ? "Online" : "Offline";
+            return `
+                <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                    onclick="ui.selectFromList('${v.id}')">
+                    <span>
+                        <strong>${v.placa}</strong>
+                        <small class="d-block text-muted">${v.modelo || ""}</small>
+                    </span>
+                    <span class="badge bg-light ${statusColor}">${statusText}</span>
+                </button>
+            `;
+        }).join("");
+        this.listGeneral.innerHTML = html;
+    }
+
+    selectFromList(vehicleId) {
+        if (this.selectEl) {
+            this.selectEl.value = vehicleId;
+            this.currentVehicle = this.vehicles.find(v => String(v.id) === String(vehicleId));
+            this.toggleMode(false);
+        }
+    }
+
+    clearSidePanel() {
+        if (this.statusEl) this.statusEl.innerText = "-";
+        if (this.lastUpdateEl) this.lastUpdateEl.innerText = "-";
+        if (this.brandModelEl) this.brandModelEl.innerText = "-";
+    }
 
     clearMarkers() {
         if (this.markers && this.markers.length) {
@@ -195,10 +221,8 @@ class TempoRealUI {
     }
 
     async updateSingleView() {
-        if (!this.currentVehicle) {
-            this.clearSidePanel();
-            return;
-        }
+        if (!this.currentVehicle) return;
+        
         try {
             const sres = await fetch(this._bust(`/localizacao/status/${this.currentVehicle.placa}`));
             if (!sres.ok) throw new Error();
@@ -215,18 +239,12 @@ class TempoRealUI {
                 this.lastUpdateEl.classList.remove("text-bg-secondary");
                 this.lastUpdateEl.classList.add("text-bg-success");
             }
-            if (this.statusEl) {
-                this.statusEl.textContent = st.status_gps;
-                this.statusEl.classList.remove("text-muted");
-                this.statusEl.classList.add(st.status_gps === "Online" ? "text-success" : "text-secondary");
-            }
-            if (this.brandModelEl) {
-                const txt = `${this.currentVehicle.marca || "-"} / ${this.currentVehicle.modelo || "-"}`;
-                this.brandModelEl.textContent = txt;
-            }
-            await this.updateEventsFor(this.currentVehicle.id);
-        } catch (_) {
-            this.clearSidePanel();
+            if (this.statusEl) this.statusEl.innerText = this.currentVehicle.status_gps || "Online";
+            if (this.brandModelEl) this.brandModelEl.innerText = `${this.currentVehicle.marca || ''} / ${this.currentVehicle.modelo || ''}`;
+            
+            this.updateEventsFor(this.currentVehicle.id);
+        } catch (e) {
+            console.error(e);
         }
     }
 
@@ -253,7 +271,6 @@ class TempoRealUI {
     async renderGeneral() {
         try {
             this.clearMarkers();
-            // Se for cliente logado, busca apenas localizações dele
             const url = this.userId ? `/localizacao/cliente/${this.userId}` : "/localizacao";
             const lr = await fetch(this._bust(url));
             const locs = await lr.json();
@@ -268,51 +285,35 @@ class TempoRealUI {
                 });
             }
             const bounds = new google.maps.LatLngBounds();
-            Object.values(latestByVehicle).forEach(({ l }) => {
-                const v = this.vehicles.find(x => String(x.id) === String(l.veiculo_id));
-                const pos = { lat: parseFloat(l.latitude), lng: parseFloat(l.longitude) };
+            let count = 0;
+            Object.values(latestByVehicle).forEach(item => {
+                const lat = parseFloat(item.l.latitude);
+                const lng = parseFloat(item.l.longitude);
+                const p = { lat, lng };
                 const m = new google.maps.Marker({
-                    position: pos,
+                    position: p,
                     map: this.map,
-                    title: v ? `${v.placa}` : `${l.placa}`
+                    title: "Veículo " + item.l.veiculo_id
                 });
-                // Prioriza status do backend para consistência
-                const status = l.status_gps ? l.status_gps : ((Date.now() - new Date(l.timestamp).getTime()) <= 9000 ? "Online" : "Offline");
-                const dt = new Date(l.timestamp);
-                const content = `<div style="color:black"><h6 style="margin-bottom:4px">${v ? v.placa : l.placa}</h6><div>${v ? (v.marca || "-") : (l.marca || "-")} / ${v ? (v.modelo || "-") : (l.modelo || "-")}</div><div>${status}</div><div>Atualizado ${this.relativeTime(dt)}</div></div>`;
-                const iw = new google.maps.InfoWindow({ content });
-                m.addListener("click", () => iw.open(this.map, m));
                 this.markers.push(m);
-                bounds.extend(pos);
+                bounds.extend(p);
+                count++;
             });
-            if (this.markers.length) {
+            if (count > 0) {
                 this.map.fitBounds(bounds);
             }
-        } catch (_) {}
-    }
-
-    relativeTime(date) {
-        const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-        if (diff < 60) return `há ${diff}s`;
-        const m = Math.floor(diff / 60);
-        if (m < 60) return `há ${m}min`;
-        const h = Math.floor(m / 60);
-        return `há ${h}h`;
-    }
-
-    clearSidePanel() {
-        if (this.lastUpdateEl) this.lastUpdateEl.textContent = "carregando...";
-        if (this.statusEl) this.statusEl.textContent = "carregando...";
-        if (this.brandModelEl) this.brandModelEl.textContent = "carregando...";
-        if (this.eventsEl) this.eventsEl.innerHTML = `<small>Nenhum evento detectado.</small>`;
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     loop() {
-        setInterval(async () => {
+        setInterval(() => {
             if (this.generalMode) {
-                await this.renderGeneral();
+                this.renderGeneral();
+                this.renderVehicleList();
             } else {
-                await this.updateSingleView();
+                this.updateSingleView();
             }
         }, 5000);
     }

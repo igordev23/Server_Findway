@@ -8,9 +8,14 @@ import pytz
 import firebase_admin
 from firebase_admin import credentials, auth
 import os
+import stripe
+
 
 br_tz = pytz.timezone("America/Sao_Paulo")
 usuario_bp = Blueprint("usuario_bp", __name__)
+
+
+stripe.api_key = os.getenv("STRIPE_API_KEY")
 
 # Inicializa Firebase uma única vez
 if not firebase_admin._apps:
@@ -90,6 +95,17 @@ def criar_usuario():
         # ----------- CLIENTE -----------
         if tipo_usuario == "cliente":
 
+               # Criar customer no Stripe para cobranças recorrentes
+            stripe_customer_id = None
+            try:
+                if stripe.api_key:
+                    customer = stripe.Customer.create(email=email, name=nome)
+                    stripe_customer_id = customer.get("id")
+            except Exception:
+                stripe_customer_id = None
+
+
+
             user = Cliente(
                 nome=nome,
                 email=email,
@@ -101,13 +117,23 @@ def criar_usuario():
                 # Quem criou o cliente (um Administrador)
                 administrador_id=data["administrador_id"],
 
-
                 rua=data["rua"],
                 cidade=data["cidade"],
                 estado=data["estado"],
                 cep=data["cep"],
-                numero=data["numero"]
+                numero=data["numero"],
+                stripe_customer_id=stripe_customer_id,
+                
+                # Campos de pagamento
+                dia_pagamento=data.get("dia_pagamento", 1),
+                plano_nome=data.get("plano_nome", "Plano Padrão"),
+                plano_valor=float(data.get("plano_valor", 0)),
+                data_inicio_cobranca=datetime.now(br_tz).date(),
+                subscription_status="ativo"  # Começa como ativo, será verificado pelo middleware
             )
+            
+            # Calcular data de próximo vencimento
+            user.atualizar_proximo_vencimento()
 
 
         # ----------- ADMINISTRADOR -----------
