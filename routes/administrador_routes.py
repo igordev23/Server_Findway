@@ -6,6 +6,7 @@ import pytz
 import firebase_admin
 from firebase_admin import credentials, auth
 import os
+from routes.auth_middleware import require_super_admin
 
 administrador_bp = Blueprint("administrador_bp", __name__)
 br_tz = pytz.timezone("America/Sao_Paulo")
@@ -24,6 +25,7 @@ if not firebase_admin._apps:
 #   LISTAR ADMINISTRADORES
 # ==============================
 @administrador_bp.route("/administradores", methods=["GET"])
+@require_super_admin
 def listar_administradores():
     administradores = Administrador.query.all()
     return jsonify([
@@ -40,6 +42,7 @@ def listar_administradores():
 #   OBTER ADMIN POR ID
 # ==============================
 @administrador_bp.route("/administradores/<int:id>", methods=["GET"])
+@require_super_admin
 def obter_administrador(id):
     admin = Administrador.query.get(id)
     if not admin:
@@ -58,6 +61,7 @@ def obter_administrador(id):
 #   ATUALIZAR ADMINISTRADOR
 # ==============================
 @administrador_bp.route("/administradores/<int:id>", methods=["PUT"])
+@require_super_admin
 def atualizar_administrador(id):
     admin = Administrador.query.get(id)
 
@@ -112,6 +116,7 @@ def atualizar_administrador(id):
 #   DELETAR ADMINISTRADOR
 # ==============================
 @administrador_bp.route("/administradores/<int:id>", methods=["DELETE"])
+@require_super_admin
 def deletar_administrador(id):
     admin = Administrador.query.get(id)
 
