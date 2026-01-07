@@ -54,14 +54,21 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.ok ? r.json() : Promise.reject(r))
             .then(data => {
               const isAdmin = !!data.is_admin;
+              const isSuperAdmin = !!data.is_super_admin;
               
               const adminMenu = document.getElementById("adminMenu");
               const clientMenu = document.getElementById("clientMenu");
+              const superAdminLink = document.getElementById("superAdminLink");
               
               // Lógica de controle de acesso e menus
               if (isAdmin) {
                 if (adminMenu) adminMenu.classList.remove("d-none");
                 if (clientMenu) clientMenu.classList.add("d-none");
+                
+                // Exibe link de gestão de empresas se for super admin
+                if (isSuperAdmin && superAdminLink) {
+                    superAdminLink.classList.remove("d-none");
+                }
               } else {
                 if (adminMenu) adminMenu.classList.add("d-none");
                 if (clientMenu) clientMenu.classList.remove("d-none");

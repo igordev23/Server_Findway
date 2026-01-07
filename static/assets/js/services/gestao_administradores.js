@@ -3,7 +3,21 @@ const AdminService = (() => {
   const defaultHeaders = { 'Content-Type': 'application/json' };
 
   async function request(url, options = {}) {
-    const config = { headers: defaultHeaders, ...options };
+    // Adicionar token do Firebase no header
+    const auth = firebase.auth();
+    const user = auth.currentUser;
+    
+    const config = { headers: { ...defaultHeaders }, ...options };
+    
+    if (user) {
+        try {
+            const token = await user.getIdToken();
+            config.headers['Authorization'] = `Bearer ${token}`;
+        } catch (e) {
+            console.error("Erro ao obter token:", e);
+        }
+    }
+
     if (config.body && typeof config.body !== 'string') {
       config.body = JSON.stringify(config.body);
     }
@@ -66,7 +80,31 @@ class AdminUI {
 
   init() {
     this.registerEvents();
-    this.loadAdmins();
+    this.waitForAuth().then(() => {
+        this.loadAdmins();
+    });
+  }
+
+  waitForAuth() {
+    return new Promise((resolve) => {
+        const checkAuth = () => {
+            if (typeof firebase !== 'undefined' && firebase.auth()) {
+                const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+                    unsubscribe();
+                    if (user) {
+                        resolve(user);
+                    } else {
+                        // Se não houver usuário logado, redireciona ou avisa
+                        console.warn("Usuário não autenticado na gestão de administradores.");
+                        window.location.href = "/login";
+                    }
+                });
+            } else {
+                setTimeout(checkAuth, 100);
+            }
+        };
+        checkAuth();
+    });
   }
 
   registerEvents() {
