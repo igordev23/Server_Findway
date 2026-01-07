@@ -59,6 +59,9 @@ def login():
         return render_with_firebase("login.html")
     return render_with_firebase("login.html")
 
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    return render_with_firebase("reset_password.html")
 
 @app.route("/")
 def index():
