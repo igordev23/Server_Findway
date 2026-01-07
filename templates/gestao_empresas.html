@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}Gestão de Administradores{% endblock %}
+{% block title %}Gestão de Empresas{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4" id="administradores-app">
@@ -8,8 +8,8 @@
     <div class="card-header bg-white border-0 py-4">
       <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
         <div>
-          <h5 class="mb-0">Administradores</h5>
-          <small class="text-muted">Gerencie os administradores do sistema</small>
+          <h5 class="mb-0">Empresas Cadastradas</h5>
+          <small class="text-muted">Gerencie as empresas do sistema</small>
         </div>
         <div class="d-flex flex-column flex-md-row gap-3 w-100 w-lg-auto">
           <div class="input-group">
@@ -20,7 +20,7 @@
               placeholder="Buscar por nome ou e-mail">
           </div>
           <button id="btnAbrirModalNovoAdmin" class="btn btn-primary d-flex align-items-center justify-content-center">
-            <i class="bi bi-plus-lg me-2"></i> Novo Administrador
+            <i class="bi bi-plus-lg me-2"></i> Novo Administrador Empresarial
           </button>
         </div>
       </div>
@@ -38,7 +38,7 @@
         <tbody id="tabela-admins">
           <tr>
             <td colspan="4" class="text-center text-muted py-5">
-              Carregando administradores...
+              Carregando administradores Empresariais ...
             </td>
           </tr>
         </tbody>
@@ -48,13 +48,13 @@
   <div id="feedback-area"></div>
 </div>
 
-<!-- Modal: novo administrador -->
+<!-- Modal: nova empresa -->
 <div class="modal fade" id="modalNovoAdmin" tabindex="-1" aria-labelledby="modalNovoAdminLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <form id="formNovoAdmin">
         <div class="modal-header">
-          <h5 class="modal-title" id="modalNovoAdminLabel">Adicionar Administrador</h5>
+          <h5 class="modal-title" id="modalNovoAdminLabel">Adicionar Administrador Empresarial</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">
