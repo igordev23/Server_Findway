@@ -1,8 +1,30 @@
 const MonitoramentoApi = (() => {
   const defaultHeaders = { "Content-Type": "application/json" };
 
+  // Função auxiliar para obter token
+  async function getIdToken() {
+    try {
+      if (typeof firebase === "undefined" || !firebase.apps.length) return null;
+      const auth = firebase.auth();
+      const user = auth.currentUser;
+      if (user) return await user.getIdToken();
+      
+      return new Promise(resolve => {
+        const unsub = auth.onAuthStateChanged(u => {
+          unsub();
+          resolve(u ? u.getIdToken() : null);
+        });
+      });
+    } catch { return null; }
+  }
+
   async function request(url, options = {}) {
-    const config = { headers: defaultHeaders, ...options };
+    // Adiciona token se disponível
+    const token = await getIdToken();
+    const headers = { ...defaultHeaders, ...options.headers };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const config = { ...options, headers };
     const response = await fetch(url, config);
     let data = null;
     try {
