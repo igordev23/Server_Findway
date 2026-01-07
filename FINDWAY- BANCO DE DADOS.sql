@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS "Usuario" (
 
 CREATE TABLE IF NOT EXISTS "Administrador" (
     "id" BIGINT PRIMARY KEY,
+    "stripe_connected_account_id" VARCHAR(255) UNIQUE,
     FOREIGN KEY ("id") REFERENCES "Usuario" ("id") ON DELETE CASCADE
 );
 
@@ -27,6 +28,20 @@ CREATE TABLE "Cliente" (
     estado VARCHAR(255) NOT NULL,
     cep VARCHAR(255) NOT NULL,
     numero VARCHAR(255) NOT NULL,
+    
+    -- Campos Stripe
+    stripe_customer_id VARCHAR(255) UNIQUE,
+    subscription_status VARCHAR(50) NOT NULL DEFAULT 'ativo',
+    
+    -- Controle de Pagamento
+    dia_pagamento INTEGER NOT NULL DEFAULT 15,
+    plano_id VARCHAR(100),
+    plano_nome VARCHAR(100),
+    plano_valor NUMERIC(10, 2),
+    data_ultimo_pagamento DATE,
+    data_proximo_vencimento DATE,
+    data_inicio_cobranca DATE,
+
     FOREIGN KEY (id) REFERENCES "Usuario"(id) ON DELETE CASCADE,
     FOREIGN KEY (administrador_id) REFERENCES "Administrador"(id) ON DELETE CASCADE
 );
