@@ -5,6 +5,7 @@ from database import db
 from datetime import datetime
 import re
 import pytz  # timezone
+from utils.event_helper import process_vehicle_events
 
 mensagens_bp = Blueprint('mensagens_bp', __name__)
 
@@ -35,8 +36,11 @@ def receber_mensagem():
     fuso_brasilia = pytz.timezone("America/Sao_Paulo")
     timestamp_brasilia = datetime.now(fuso_brasilia)
 
+    # Processar Eventos (Movimento/Parada)
+    process_vehicle_events(veiculo, lat, lng, timestamp_brasilia)
+
      # Atualiza status do veículo (ONLINE)
-    veiculo.status_ignicao = True
+    # veiculo.status_ignicao = True # Removido para deixar o helper decidir baseado na velocidade
     veiculo.ultima_atualizacao = timestamp_brasilia
 
     # Criar entrada GPS

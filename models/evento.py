@@ -12,6 +12,7 @@ class Evento(db.Model):
     tipo = db.Column(db.String(50), nullable=False)
     descricao = db.Column(db.String(255), nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(br_tz))
+    lido = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f"<Evento {self.tipo} - Veiculo {self.veiculo_id}>"
