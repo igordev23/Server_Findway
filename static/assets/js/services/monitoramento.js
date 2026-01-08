@@ -95,7 +95,7 @@ class MonitoramentoUI {
     if (this.state.autoRefresh) {
       this.state.refreshIntervalId = setInterval(() => {
         this.loadAll(false);
-      }, 10000); // 10s
+      }, 5000); // 5s
     }
   }
 

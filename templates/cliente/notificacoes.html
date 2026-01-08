@@ -4,95 +4,44 @@
 
 {% block content %}
 <div class="container py-4">
-  <div class="row g-4">
-    <div class="col-lg-8">
+  <div class="row">
+    <div class="col-lg-12">
       <div class="card shadow-sm border-0">
-        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-          <span><i class="bi bi-bell me-2"></i>Alertas recentes</span>
-          <div class="btn-group btn-group-sm" role="group">
-            <button type="button" class="btn btn-light active">Todos</button>
-            <button type="button" class="btn btn-light">Ignition</button>
-            <button type="button" class="btn btn-light">Conectividade</button>
-          </div>
-        </div>
-        <div class="list-group list-group-flush">
-          <div class="list-group-item d-flex align-items-start gap-3">
-            <i class="bi bi-exclamation-octagon text-danger fs-4"></i>
-            <div class="flex-grow-1">
-              <div class="d-flex justify-content-between">
-                <h6 class="mb-1">Movimento inesperado</h6>
-                <small class="text-muted">há 2 min</small>
-              </div>
-              <p class="mb-1 text-muted small">
-                A moto foi movimentada enquanto a ignição estava desligada. Confirme no mapa.
-              </p>
-              <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary btn-sm">Ver no mapa</button>
-                <button class="btn btn-outline-secondary btn-sm">Marcar como lido</button>
-              </div>
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                 <h5 class="mb-0 text-dark"><i class="bi bi-bell me-2"></i>Notificações</h5>
+                 <button class="btn btn-sm btn-outline-secondary" id="btnMarkAllRead" title="Marcar todas como lidas">
+                    <i class="bi bi-check-all"></i>
+                 </button>
             </div>
-          </div>
-          <div class="list-group-item d-flex align-items-start gap-3">
-            <i class="bi bi-plug text-primary fs-4"></i>
-            <div class="flex-grow-1">
-              <div class="d-flex justify-content-between">
-                <h6 class="mb-1">Ignition reativada</h6>
-                <small class="text-muted">há 10 min</small>
-              </div>
-              <p class="mb-0 text-muted small">
-                Comando aprovado pelo cliente. Status atualizado para <strong>Ligada</strong>.
-              </p>
+            
+            <!-- Filters -->
+            <div class="d-flex gap-2 overflow-auto" id="notification-filters">
+                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 active" data-filter="all">Todos</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-filter="unread">Não lidas</button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-filter="MOVIMENTO">Movimento</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-filter="PARADA">Parada</button>
+                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3" data-filter="ALERTA">Alerta</button>
+                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3" data-filter="offline">Conexão</button>
             </div>
-          </div>
-          <div class="list-group-item d-flex align-items-start gap-3">
-            <i class="bi bi-wifi-off text-warning fs-4"></i>
-            <div class="flex-grow-1">
-              <div class="d-flex justify-content-between">
-                <h6 class="mb-1">Perda de conexão</h6>
-                <small class="text-muted">há 30 min</small>
-              </div>
-              <p class="mb-0 text-muted small">
-                O rastreador ficou offline por mais de 5 minutos. Última posição registrada às 18h03.
-              </p>
+        </div>
+        
+        <div class="list-group list-group-flush" id="notificacoes-lista">
+          <!-- Notificações serão carregadas aqui via JS -->
+          <div class="text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Carregando...</span>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-4">
-      <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
-          <h6 class="fw-semibold mb-3">Preferências de push</h6>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="pushIgnicao" checked>
-            <label class="form-check-label" for="pushIgnicao">Alertas de ignição</label>
-          </div>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="pushMovimento" checked>
-            <label class="form-check-label" for="pushMovimento">Movimento inesperado</label>
-          </div>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="pushConexao">
-            <label class="form-check-label" for="pushConexao">Perda de conexão</label>
-          </div>
-          <button class="btn btn-primary w-100 mt-3" type="button">Salvar notificações</button>
-        </div>
-      </div>
-
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <h6 class="fw-semibold mb-3">Envio de testes</h6>
-          <p class="text-muted small">Dispare uma notificação de teste para validar seu aplicativo.</p>
-          <div class="d-grid gap-2">
-            <button class="btn btn-outline-primary btn-sm" type="button">Testar push no app</button>
-            <button class="btn btn-outline-secondary btn-sm" type="button">Enviar e-mail</button>
-            <button class="btn btn-outline-secondary btn-sm" type="button">Enviar SMS</button>
+            <p class="mb-0 mt-2 small">Carregando notificações...</p>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="/static/assets/js/services/notificacoes_cliente.js"></script>
 {% endblock %}
 
