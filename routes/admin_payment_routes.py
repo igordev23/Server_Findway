@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, redirect, url_for
 from models.administrador import Administrador
 from database import db
+from middlewares import _get_email_from_auth_header
 import stripe
 import os
 
@@ -8,15 +9,21 @@ admin_bp = Blueprint("admin_bp", __name__)
 
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 
+def _get_logged_admin():
+    email = _get_email_from_auth_header()
+    if not email:
+        return None
+    return Administrador.query.filter_by(email=email).first()
+
 @admin_bp.route("/admin/stripe-connect/status", methods=["GET"])
 def stripe_connect_status():
     """Verificar status da conexão Stripe Connect do administrador"""
     try:
-        # Em um sistema real, obteria o admin logado
-        # Por enquanto, usa o primeiro admin como exemplo
-        admin = Administrador.query.first()
+        admin = _get_logged_admin()
+        if not admin:
+             return jsonify({"error": "Administrador não identificado"}), 401
         
-        if admin and getattr(admin, "stripe_connected_account_id", None):
+        if getattr(admin, "stripe_connected_account_id", None):
             account_id = admin.stripe_connected_account_id
             
             # Tenta buscar os dados reais no Stripe para confirmar se a conta existe e é válida
@@ -62,10 +69,9 @@ def stripe_connect_status():
 def stripe_connect_create_link():
     """Criar link para conexão Stripe Connect"""
     try:
-        # Em um sistema real, obteria o admin logado
-        admin = Administrador.query.first()
+        admin = _get_logged_admin()
         if not admin:
-            return jsonify({"error": "Administrador não encontrado"}), 404
+            return jsonify({"error": "Administrador não encontrado ou não autenticado"}), 404
         
         # Verificar se admin já tem uma conta Stripe Connect
         account_id = getattr(admin, "stripe_connected_account_id", None)
@@ -82,8 +88,7 @@ def stripe_connect_create_link():
             )
             account_id = account.id
             
-            # Salvar no banco (precisamos garantir que o modelo suporta isso)
-            # Como fallback rápido, vamos assumir que foi salvo ou usar em memória
+            # Salvar no banco
             admin.stripe_connected_account_id = account_id
             db.session.commit()
 
@@ -107,8 +112,7 @@ def stripe_connect_create_link():
 def stripe_connect_disconnect():
     """Desconectar conta Stripe Connect"""
     try:
-        # Em um sistema real, obteria o admin logado
-        admin = Administrador.query.first()
+        admin = _get_logged_admin()
         if not admin:
             return jsonify({"error": "Administrador não encontrado"}), 404
         
@@ -124,8 +128,7 @@ def stripe_connect_disconnect():
 def get_payment_config():
     """Obter configurações de pagamento do administrador"""
     try:
-        # Em um sistema real, obteria o admin logado
-        admin = Administrador.query.first()
+        admin = _get_logged_admin()
         if not admin:
             return jsonify({"error": "Administrador não encontrado"}), 404
         
@@ -152,8 +155,7 @@ def save_payment_config():
     try:
         data = request.get_json(force=True)
         
-        # Em um sistema real, obteria o admin logado
-        admin = Administrador.query.first()
+        admin = _get_logged_admin()
         if not admin:
             return jsonify({"error": "Administrador não encontrado"}), 404
         

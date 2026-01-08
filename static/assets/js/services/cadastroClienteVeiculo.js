@@ -127,6 +127,24 @@ class ClientesUI {
       return;
     }
 
+    // Aguarda o evento do auth-check.js se necessário
+    const resolvedId = await new Promise((resolve) => {
+      const handler = (e) => {
+        document.removeEventListener('auth:admin-resolved', handler);
+        resolve(e.detail.adminId);
+      };
+      document.addEventListener('auth:admin-resolved', handler);
+      setTimeout(() => {
+        document.removeEventListener('auth:admin-resolved', handler);
+        resolve(null);
+      }, 3000);
+    });
+
+    if (resolvedId) {
+      this.adminId = Number(resolvedId);
+      return;
+    }
+
     try {
       const admins = await ApiService.listAdministradores();
       if (Array.isArray(admins) && admins.length) {

@@ -127,6 +127,13 @@ def check_payment_status(f):
                 status_pagamento_em_dia = cliente.verificar_status_pagamento()
                 status_atual = (getattr(cliente, "subscription_status", "ativo") or "ativo").strip().lower()
                 
+                # Se não está em dia, mas o status ainda consta como ativo, atualiza para inadimplente
+                if not status_pagamento_em_dia and status_atual == "ativo":
+                    print(f"[DEBUG] Atualizando status de {email} para inadimplente no banco.")
+                    cliente.subscription_status = "inadimplente"
+                    db.session.commit()
+                    status_atual = "inadimplente"
+                
                 print(f"[DEBUG] Cliente {email} - Status atual: {status_atual}, Pagamento em dia: {status_pagamento_em_dia}")
                 
                 # Se não está em dia com o pagamento, redireciona

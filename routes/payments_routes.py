@@ -348,15 +348,27 @@ def create_plan():
     except Exception:
         return jsonify({"error": "amount_brl inválido"}), 400
 
+    # Identificar o administrador logado para vincular ao plano
+    email = _get_email_from_auth_header()
+    admin_id = None
+    if email:
+        admin = Administrador.query.filter_by(email=email).first()
+        if admin:
+            admin_id = str(admin.id)
+
     try:
-        product = stripe.Product.create(name=name)
+        product_data = {"name": name}
+        if admin_id:
+            product_data["metadata"] = {"created_by_admin_id": admin_id}
+
+        product = stripe.Product.create(**product_data)
         price = stripe.Price.create(
             product=product.get("id"),
             unit_amount=unit_amount,
             currency=currency,
             recurring={"interval": interval},
         )
-        current_app.logger.info(f"Plano criado: product={product.get('id')} price={price.get('id')}")
+        current_app.logger.info(f"Plano criado: product={product.get('id')} price={price.get('id')} admin={admin_id}")
         return jsonify({
             "product_id": product.get("id"),
             "price_id": price.get("id"),
@@ -364,6 +376,7 @@ def create_plan():
             "amount_brl": amount_brl,
             "currency": currency,
             "interval": interval,
+            "created_by_admin_id": admin_id
         }), 201
     except Exception as e:
         current_app.logger.error(f"Erro ao criar plano Stripe: {e}")
@@ -374,14 +387,42 @@ def create_plan():
 def list_prices():
     if not stripe.api_key:
         return jsonify({"error": "Stripe API Key não configurada"}), 500
+    
+    # Identificar contexto de quem está solicitando (Admin ou Cliente)
+    filter_admin_id = None
+    email = _get_email_from_auth_header()
+    
+    if email:
+        # Se for admin, filtra pelos planos que ELE criou
+        admin = Administrador.query.filter_by(email=email).first()
+        if admin:
+            filter_admin_id = str(admin.id)
+        else:
+            # Se for cliente, filtra pelos planos do SEU admin
+            cliente = Cliente.query.filter_by(email=email).first()
+            if cliente and cliente.administrador_id:
+                filter_admin_id = str(cliente.administrador_id)
+
     try:
-        prices = stripe.Price.list(active=True, expand=["data.product"], limit=50)
+        prices = stripe.Price.list(active=True, expand=["data.product"], limit=100)
         items = []
         for p in prices.get("data", []):
             rec = p.get("recurring") or {}
             if rec.get("interval") != "month":
                 continue
             product = p.get("product")
+            
+            # Lógica de Filtragem
+            if filter_admin_id:
+                # Se temos um ID de filtro, verificamos o metadata do produto
+                prod_admin_id = (product.get("metadata") or {}).get("created_by_admin_id")
+                
+                # Filtragem ESTRITA:
+                # Só mostra o plano se o ID bater exatamente.
+                # Isso esconde planos antigos (sem metadata) e planos de outros admins.
+                if prod_admin_id != filter_admin_id:
+                    continue
+
             items.append({
                 "price_id": p.get("id"),
                 "product_id": product.get("id") if isinstance(product, dict) else None,
@@ -390,6 +431,7 @@ def list_prices():
                 "currency": p.get("currency"),
                 "interval": rec.get("interval"),
                 "active": p.get("active"),
+                "created_by": (product.get("metadata") or {}).get("created_by_admin_id")
             })
         return jsonify(items), 200
     except Exception as e:

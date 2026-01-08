@@ -22,20 +22,33 @@ if not firebase_admin._apps:
 
 @cliente_bp.route("/clientes", methods=["GET"])
 def listar_clientes():
-    clientes = Cliente.query.all()
-    return jsonify([
-        {
-            "id": c.id,
-            "nome": c.nome,
-            "email": c.email,
-            "telefone": c.telefone,
-            "cidade": c.cidade,
-            "estado": c.estado,
-            "administrador_id": c.administrador_id,
-             "stripe_customer_id": getattr(c, "stripe_customer_id", None),
-            "subscription_status": getattr(c, "subscription_status", None),
-        } for c in clientes
-    ])
+    email = middlewares._get_email_from_auth_header()
+    
+    # 1. Tenta identificar Admin
+    if email:
+        from models.administrador import Administrador
+        admin = Administrador.query.filter_by(email=email).first()
+        if admin:
+            # Se for admin, retorna SÓ os clientes dele
+            clientes = Cliente.query.filter_by(administrador_id=admin.id).all()
+            return jsonify([
+                {
+                    "id": c.id,
+                    "nome": c.nome,
+                    "email": c.email,
+                    "telefone": c.telefone,
+                    "cidade": c.cidade,
+                    "estado": c.estado,
+                    "administrador_id": c.administrador_id,
+                    "stripe_customer_id": getattr(c, "stripe_customer_id", None),
+                    "subscription_status": getattr(c, "subscription_status", None),
+                } for c in clientes
+            ])
+
+    # 2. Se não for admin (ou não autenticado), fallback (ou vazio)
+    # Por compatibilidade, se não tiver auth, retorna vazio para não vazar dados
+    # Se quiser manter comportamento antigo ( inseguro), seria query.all(), mas vamos fechar.
+    return jsonify([])
 
 @cliente_bp.route("/clientes/admin/<int:admin_id>", methods=["GET"])
 def listar_clientes_por_admin(admin_id):
@@ -84,6 +97,11 @@ def criar_cliente():
         estado = data["estado"]
         cep = data["cep"]
         numero = data["numero"]
+        
+        # Campos de pagamento
+        dia_pagamento = data.get("dia_pagamento", 15)
+        plano_nome = data.get("plano_nome")
+        plano_valor = data.get("plano_valor")
 
         # Cria usuário no Firebase
         firebase_user = auth.create_user(
@@ -106,8 +124,15 @@ def criar_cliente():
             cidade=cidade,
             estado=estado,
             cep=cep,
-            numero=numero
+            numero=numero,
+            dia_pagamento=dia_pagamento,
+            plano_nome=plano_nome,
+            plano_valor=plano_valor,
+            data_inicio_cobranca=datetime.now(br_tz).date()
         )
+        
+        # Calcula o primeiro vencimento
+        cliente.atualizar_proximo_vencimento()
 
         db.session.add(cliente)
         db.session.commit()

@@ -61,7 +61,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectPlano) {
         selectPlano.innerHTML = `<option value="">Carregando planos...</option>`;
       }
-      const res = await fetch("/payments/prices");
+
+      let token = null;
+      try {
+          const authData = await getAuthAndEmail();
+          token = authData.token;
+      } catch (e) {
+          // Usuário não autenticado, segue sem token
+      }
+
+      const res = await fetch("/payments/prices", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       const items = await res.json();
       plansCache = Array.isArray(items) ? items : [];
       if (!Array.isArray(items) || !items.length) {

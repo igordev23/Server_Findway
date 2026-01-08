@@ -193,11 +193,6 @@ def pagamento_pendente():
     )
 
 
-@app.route("/criar-auth-temp")
-def criar_auth_temp():
-    return render_template("criar_auth.html", firebase_config=get_firebase_config())
-
-
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

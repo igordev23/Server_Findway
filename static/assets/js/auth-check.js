@@ -56,6 +56,11 @@ document.addEventListener("DOMContentLoaded", () => {
               const isAdmin = !!data.is_admin;
               const isSuperAdmin = !!data.is_super_admin;
               
+              if (isAdmin && data.user_id) {
+                window.ADMIN_ID = data.user_id;
+                document.dispatchEvent(new CustomEvent('auth:admin-resolved', { detail: { adminId: data.user_id } }));
+              }
+
               const adminMenu = document.getElementById("adminMenu");
               const clientMenu = document.getElementById("clientMenu");
               const superAdminLink = document.getElementById("superAdminLink");
