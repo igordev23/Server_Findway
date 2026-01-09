@@ -35,8 +35,9 @@
 
       <button type="submit" id="btnLogin" class="btn btn-primary w-100 btn-loader">Entrar</button>
 
-      <div class="text-center text-muted mt-3">
-        <a href="#">Esqueceu sua senha?</a>
+       <div class="text-center text-muted mt-3">
+        <!-- Link atualizado para a rota de redefinição de senha -->
+        <a href="{{ url_for('reset_password') }}">Esqueceu sua senha?</a>
       </div>
       <p class="text-center mt-3 text-danger" id="erro"></p>
     </form>
