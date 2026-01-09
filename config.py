@@ -16,3 +16,4 @@ class Config:
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+    ASSETS_ROOT = '/static/assets'

@@ -181,6 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
           else if (n.tipo === "ALERTA") { icon = "bi-exclamation-triangle"; color = "text-warning"; }
           else if (n.tipo === "MOVIMENTO") { icon = "bi-exclamation-octagon"; color = "text-danger"; }
           else if (n.tipo === "PARADA") { icon = "bi-stop-circle"; color = "text-secondary"; }
+          else if (n.tipo === "IGNICAO_CORTADA") { icon = "bi-power"; color = "text-danger"; }
+          else if (n.tipo === "IGNICAO_REATIVADA") { icon = "bi-power"; color = "text-success"; }
 
           // Pass raw timestamp for offline handling
           const dataAttr = n.rawTimestamp ? `data-raw-timestamp="${n.rawTimestamp}"` : "";
