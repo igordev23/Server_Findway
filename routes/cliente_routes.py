@@ -64,7 +64,8 @@ def obter_cliente(id):
         "cidade": cliente.cidade,
         "estado": cliente.estado,
         "cep": cliente.cep,
-        "administrador_id": cliente.administrador_id
+        "administrador_id": cliente.administrador_id,
+        "tem_pin": bool(cliente.pin)
     })
 
 @cliente_bp.route("/clientes", methods=["POST"])
@@ -182,6 +183,7 @@ def atualizar_cliente(id):
     novo_estado = dados.get("estado")
     novo_numero = dados.get("numero")
     novo_cep = dados.get("cep")
+    novo_pin = dados.get("pin")
 
     try:
         # 1️⃣ Atualizar no Firebase (se tiver UID)
@@ -229,6 +231,9 @@ def atualizar_cliente(id):
         if novo_cep:
             cliente.cep = novo_cep
 
+        if novo_pin:
+            cliente.pin = novo_pin
+
         cliente.atualizado_em = datetime.now(br_tz)
 
         db.session.commit()
@@ -261,3 +266,21 @@ def listar_veiculos_por_cliente(id):
         }
         for v in veiculos
     ])
+
+@cliente_bp.route("/clientes/<int:id>/recuperar-pin", methods=["POST"])
+def recuperar_pin(id):
+    cliente = Cliente.query.get(id)
+    if not cliente:
+        return jsonify({"error": "Cliente não encontrado"}), 404
+    
+    if not cliente.pin:
+        return jsonify({"error": "PIN não configurado para este cliente."}), 400
+
+    # Simulação de envio de email
+    print(f"==================================================")
+    print(f"[EMAIL SIMULATION] Para: {cliente.email}")
+    print(f"Assunto: Recuperação de PIN - Findway")
+    print(f"Mensagem: Olá {cliente.nome}, seu PIN de segurança é: {cliente.pin}")
+    print(f"==================================================")
+
+    return jsonify({"message": f"Um e-mail com o PIN foi enviado para {cliente.email}"}), 200

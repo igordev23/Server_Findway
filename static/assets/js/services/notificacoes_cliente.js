@@ -280,6 +280,14 @@ document.addEventListener("DOMContentLoaded", () => {
                icon = "bi-stop-circle";
                color = "secondary";
                title = "Veículo parado";
+             } else if (e.tipo === "IGNICAO_CORTADA") {
+               icon = "bi-power";
+               color = "danger";
+               title = "Ignição Cortada";
+             } else if (e.tipo === "IGNICAO_REATIVADA") {
+               icon = "bi-power";
+               color = "success";
+               title = "Ignição Reativada";
              }
              
              tempNotifications.push({
