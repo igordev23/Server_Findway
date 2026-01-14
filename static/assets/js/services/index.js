@@ -252,7 +252,11 @@ class TempoRealUI {
         try {
             const er = await fetch(this._bust("/eventos"));
             const all = await er.json();
-            const list = Array.isArray(all) ? all.filter(e => String(e.veiculo_id) === String(veiculoId)) : [];
+            let list = Array.isArray(all) ? all.filter(e => String(e.veiculo_id) === String(veiculoId)) : [];
+            
+            // Limit to last 10 events
+            list = list.slice(0, 10);
+
             if (!this.eventsEl) return;
             if (!list.length) {
                 this.eventsEl.innerHTML = `<small>Nenhum evento detectado.</small>`;
