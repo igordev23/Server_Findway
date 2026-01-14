@@ -8,9 +8,13 @@ import pytz
 import firebase_admin
 from firebase_admin import credentials, auth
 import os
+import stripe
 
 br_tz = pytz.timezone("America/Sao_Paulo")
 usuario_bp = Blueprint("usuario_bp", __name__)
+
+
+stripe.api_key = os.getenv("STRIPE_API_KEY")
 
 # Inicializa Firebase uma única vez
 if not firebase_admin._apps:
@@ -74,6 +78,19 @@ def criar_usuario():
         telefone = data.get("telefone", "")
         tipo_usuario = data["tipo_usuario"]  # cliente ou administrador
 
+        # Se for criar administrador, verificar se quem solicita é o Super Admin
+        if tipo_usuario == "administrador":
+            # Verificação manual do decorator para permitir lógica condicional dentro da função
+            # ou extrair lógica. Como o decorator envolve a função toda, aqui vamos fazer uma verificação inline
+            # ou separar em outra rota. Mas para manter a rota unificada, vamos checar o token aqui.
+            
+            from routes.auth_middleware import check_firebase_token
+            decoded_token = check_firebase_token()
+            super_admin_email = os.getenv("SUPER_ADMIN_EMAIL")
+            
+            if not decoded_token or not super_admin_email or decoded_token.get("email", "").lower() != super_admin_email.lower():
+                return jsonify({"error": "Apenas o Administrador Geral pode criar novos administradores."}), 403
+
         # 1️⃣ Criar no Firebase Authentication
         firebase_user = auth.create_user(
             email=email,
@@ -90,6 +107,17 @@ def criar_usuario():
         # ----------- CLIENTE -----------
         if tipo_usuario == "cliente":
 
+               # Criar customer no Stripe para cobranças recorrentes
+            stripe_customer_id = None
+            try:
+                if stripe.api_key:
+                    customer = stripe.Customer.create(email=email, name=nome)
+                    stripe_customer_id = customer.get("id")
+            except Exception:
+                stripe_customer_id = None
+
+
+
             user = Cliente(
                 nome=nome,
                 email=email,
@@ -101,13 +129,23 @@ def criar_usuario():
                 # Quem criou o cliente (um Administrador)
                 administrador_id=data["administrador_id"],
 
-
                 rua=data["rua"],
                 cidade=data["cidade"],
                 estado=data["estado"],
                 cep=data["cep"],
-                numero=data["numero"]
+                numero=data["numero"],
+                stripe_customer_id=stripe_customer_id,
+                
+                # Campos de pagamento
+                dia_pagamento=data.get("dia_pagamento", 1),
+                plano_nome=data.get("plano_nome", "Plano Padrão"),
+                plano_valor=float(data.get("plano_valor", 0)),
+                data_inicio_cobranca=datetime.now(br_tz).date(),
+                subscription_status="ativo"  # Começa como ativo, será verificado pelo middleware
             )
+            
+            # Calcular data de próximo vencimento
+            user.atualizar_proximo_vencimento()
 
 
         # ----------- ADMINISTRADOR -----------
@@ -164,11 +202,15 @@ def verificar_role():
     tipo = (row[2] or "").lower()
     if tipo == "admin":
         tipo = "administrador"
+    
+    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "").lower()
+    is_super_admin = (row[1].lower() == super_admin_email) if super_admin_email else False
 
     return jsonify({
         "found": True,
         "role": tipo,
         "is_admin": tipo == "administrador",
+        "is_super_admin": is_super_admin,
         "user_id": row[0],
         "email": row[1]
     })

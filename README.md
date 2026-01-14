@@ -2,7 +2,7 @@
 
 FindWay é uma aplicação web completa para rastreamento e monitoramento de veículos em tempo real. O sistema permite que administradores gerenciem clientes e veículos, enquanto oferece visualização de localização GPS, histórico de movimentação e mensagens entre usuários.
 
-## 📋 Características Principais
+## Características Principais
 
 - **Autenticação com Firebase** - Login seguro com Firebase Authentication
 - **Rastreamento em Tempo Real** - Visualização de localização de veículos no Google Maps
@@ -13,7 +13,7 @@ FindWay é uma aplicação web completa para rastreamento e monitoramento de ve�
 - **Interface Responsiva** - Layout adaptável para desktop e mobile
 - **Dashboard Intuitivo** - Painél de controle com dados em tempo real
 
-## 🛠 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 ### Backend
 - **Flask** - Framework web Python
@@ -36,7 +36,7 @@ FindWay é uma aplicação web completa para rastreamento e monitoramento de ve�
 - **Render** - Hospedagem (banco remoto)
 - **GitHub** - Versionamento
 
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 Server_Findway/
@@ -97,7 +97,7 @@ Server_Findway/
 └── __pycache__/                     # Cache Python (ignorar)
 ```
 
-## 🚀 Como Executar Localmente
+## Como Executar Localmente
 
 ### Pré-requisitos
 - Python 3.8+
@@ -148,8 +148,8 @@ FIREBASE_CREDENTIALS=/caminho/para/serviceAccountKey.json
 # Google Maps API
 GOOGLE_MAPS_API_KEY=sua_chave_google_maps_api
 
-# Porta (opcional)
-PORT=5000
+# Email do super administrador
+ADMIN_EMAIL=exemplo@findway.com
 ```
 
 ### 5. Inicializar Banco de Dados
@@ -168,7 +168,7 @@ python app.py
 
 Acesse em: `http://localhost:5000`
 
-## 🔐 Autenticação e Segurança
+## Autenticação e Segurança
 
 ### Fluxo de Autenticação
 1. Usuário acessa a aplicação e é redirecionado para `/login`
@@ -185,18 +185,18 @@ Acesse em: `http://localhost:5000`
 - Token armazenado no localStorage do navegador
 
 
-## 📝 Licença
+## Licença
 
 Este projeto é parte do projeto de pesquisa FindWay-EmbarcaTech.
 
-## 👥 Autores
+## Autores
 
 - Igor ([@igordev23](https://github.com/igordev23))
 - Larissa Souza ([@larissaNa](https://github.com/larissaNa))
 - Mª Isabelly ([@Isabellybrt](https://github.com/Isabellybrt))
 - Vanessa Pereira([vanessapereiracunha](https://github.com/vanessapereiracunha))
 
-## 📧 Contato
+## Contato
 
 Para dúvidas ou sugestões, entre em contato através da Central de Ajuda da aplicação.
 

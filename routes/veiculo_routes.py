@@ -1,22 +1,44 @@
 from flask import Blueprint, request, jsonify
+from middlewares import check_subscription_status, _get_email_from_auth_header
 from database import db
 from models.veiculo import Veiculo
 from models.cliente import Cliente
+from models.administrador import Administrador
 from models.localizacao import Localizacao 
+from models.log_comando import LogComando
 from datetime import datetime
 import pytz
-
-
-
+import models.evento as evento
 
 br_tz = pytz.timezone("America/Sao_Paulo")
 veiculo_bp = Blueprint("veiculo_bp", __name__)
 
 @veiculo_bp.route("/veiculos", methods=["GET"])
+@check_subscription_status
 def listar_veiculos():
     agora = datetime.now(br_tz)
 
-    veiculos = Veiculo.query.all()
+    email = _get_email_from_auth_header()
+    if not email:
+        return jsonify([])
+
+    veiculos = []
+    
+    # 1. Verifica se é Administrador
+    admin = Administrador.query.filter_by(email=email).first()
+    if admin:
+        # Retorna veículos dos clientes criados por este admin
+        veiculos = Veiculo.query.join(Cliente).filter(Cliente.administrador_id == admin.id).all()
+    else:
+        # 2. Verifica se é Cliente
+        cliente = Cliente.query.filter_by(email=email).first()
+        if cliente:
+            # Retorna apenas os veículos deste cliente
+            veiculos = Veiculo.query.filter_by(cliente_id=cliente.id).all()
+        else:
+            # Se não identificou usuário, retorna lista vazia por segurança
+            return jsonify([])
+
     resposta = []
 
     for v in veiculos:
@@ -91,10 +113,28 @@ def listar_veiculos_por_admin(admin_id):
     return jsonify(resposta)
 
 @veiculo_bp.route("/veiculos/<int:id>", methods=["GET"])
+@check_subscription_status
 def obter_veiculo(id):
     v = Veiculo.query.get(id)
     if not v:
         return jsonify({"error": "Veículo não encontrado"}), 404
+
+    # Verificação de segurança
+    email = _get_email_from_auth_header()
+    if email:
+        admin = Administrador.query.filter_by(email=email).first()
+        if admin:
+            # Admin só vê veículos de SEUS clientes
+            if v.cliente and v.cliente.administrador_id != admin.id:
+                return jsonify({"error": "Acesso não autorizado a este veículo"}), 403
+        else:
+            cliente = Cliente.query.filter_by(email=email).first()
+            if cliente:
+                # Cliente só vê SEUS veículos
+                if v.cliente_id != cliente.id:
+                    return jsonify({"error": "Acesso não autorizado a este veículo"}), 403
+            else:
+                return jsonify({"error": "Usuário não identificado"}), 403
 
     agora = datetime.now(br_tz)
     status_gps = "Offline"
@@ -127,6 +167,21 @@ def obter_veiculo(id):
 @veiculo_bp.route("/veiculos", methods=["POST"])
 def criar_veiculo():
     data = request.json
+
+    # Segurança
+    email = _get_email_from_auth_header()
+    if email:
+        admin = Administrador.query.filter_by(email=email).first()
+        if admin:
+            # Verifica se o cliente_id pertence a este admin
+            cliente_id = data.get("cliente_id")
+            if cliente_id:
+                cliente = Cliente.query.get(cliente_id)
+                if not cliente or cliente.administrador_id != admin.id:
+                    return jsonify({"error": "Cliente inválido ou não pertence a este administrador"}), 403
+        else:
+             return jsonify({"error": "Apenas administradores podem criar veículos"}), 403
+
     placa_existente = Veiculo.query.filter_by(placa=data["placa"]).first()
     if placa_existente:
         return jsonify({"error": "Já existe um veículo com essa placa"}), 400
@@ -153,6 +208,17 @@ def deletar_veiculo(id):
     veiculo = Veiculo.query.get(id)
     if not veiculo:
         return jsonify({"error": "Veículo não encontrado"}), 404
+
+    # Segurança
+    email = _get_email_from_auth_header()
+    if email:
+        admin = Administrador.query.filter_by(email=email).first()
+        if admin:
+            if veiculo.cliente and veiculo.cliente.administrador_id != admin.id:
+                return jsonify({"error": "Acesso não autorizado"}), 403
+        else:
+            return jsonify({"error": "Apenas administradores podem remover veículos"}), 403
+
     try:
         db.session.delete(veiculo)
         db.session.commit()
@@ -167,6 +233,16 @@ def atualizar_veiculo(id):
     veiculo = Veiculo.query.get(id)
     if not veiculo:
         return jsonify({"error": "Veículo não encontrado"}), 404
+
+    # Segurança
+    email = _get_email_from_auth_header()
+    if email:
+        admin = Administrador.query.filter_by(email=email).first()
+        if admin:
+            if veiculo.cliente and veiculo.cliente.administrador_id != admin.id:
+                return jsonify({"error": "Acesso não autorizado"}), 403
+        else:
+            return jsonify({"error": "Apenas administradores podem atualizar veículos"}), 403
 
     data = request.json
 
@@ -191,6 +267,7 @@ def atualizar_veiculo(id):
     
 # Listar veículos de um cliente específico
 @veiculo_bp.route("/veiculos/cliente/<int:cliente_id>", methods=["GET"])
+@check_subscription_status
 def listar_veiculos_cliente(cliente_id):
     agora = datetime.now(br_tz)
     veiculos = Veiculo.query.filter_by(cliente_id=cliente_id).all()
@@ -215,7 +292,7 @@ def listar_veiculos_cliente(cliente_id):
             if v.ultima_atualizacao:
                 delta = agora - v.ultima_atualizacao
                 status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
-            
+        
         resposta.append({
             "id": v.id,
             "placa": v.placa,
@@ -225,9 +302,9 @@ def listar_veiculos_cliente(cliente_id):
             "status_gps": status_gps,
             "status_ignicao": v.status_ignicao,
             "ativo": v.ativo,
-            "cliente_id": v.cliente_id,
-            "cliente_nome": v.cliente.nome if v.cliente else None
+            "cliente_id": v.cliente_id
         })
+
     return jsonify(resposta)
 
 @veiculo_bp.route("/veiculo/<placa>", methods=["DELETE"])
@@ -241,3 +318,96 @@ def deletar_veiculo_placa(placa):
     db.session.commit()
 
     return jsonify({"message": "Veículo e localizações removidas"})
+
+# ==========================================
+#  CONTROLE DE IGNIÇÃO
+# ==========================================
+
+@veiculo_bp.route("/veiculos/<int:id>/comando", methods=["POST"])
+def enviar_comando(id):
+    veiculo = Veiculo.query.get(id)
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    data = request.json
+    comando = data.get("comando")  # "cortar" ou "reativar"
+    pin = str(data.get("pin", "")).strip()
+    cliente_id = data.get("cliente_id")
+
+    if not comando or comando not in ["cortar", "reativar"]:
+        return jsonify({"error": "Comando inválido"}), 400
+
+    if not cliente_id:
+        return jsonify({"error": "ID do cliente não fornecido"}), 400
+
+    cliente = Cliente.query.get(cliente_id)
+    if not cliente:
+        return jsonify({"error": "Cliente não encontrado"}), 404
+
+    # Verifica PIN
+    if not cliente.pin:
+         return jsonify({"error": "PIN de segurança não configurado. Configure no seu perfil."}), 403
+
+    if cliente.pin != pin:
+        return jsonify({"error": "PIN incorreto"}), 403
+
+    # Executa comando (Atualiza estado e Log)
+    # True = Ligada (Ativada/Verde), False = Cortada (Desativada/Vermelho)
+    novo_status = False if comando == "cortar" else True
+    veiculo.status_ignicao = novo_status
+    veiculo.ultima_atualizacao = datetime.now(br_tz)
+
+    log = LogComando(
+        veiculo_id=veiculo.id,
+        comando="Corte de ignição" if comando == "cortar" else "Reativação da ignição",
+        origem="App Cliente",
+        status="Confirmado", 
+        timestamp=datetime.now(br_tz)
+    )
+
+    # Notificação de Evento
+    tipo_evento = "IGNICAO_CORTADA" if comando == "cortar" else "IGNICAO_REATIVADA"
+    desc_evento = "Ignição cortada remotamente pelo usuário" if comando == "cortar" else "Ignição reativada remotamente pelo usuário"
+    
+    novo_evento = evento.Evento(
+        veiculo_id=veiculo.id,
+        tipo=tipo_evento,
+        descricao=desc_evento,
+        timestamp=datetime.now(br_tz)
+    )
+
+    try:
+        db.session.add(log)
+        db.session.add(novo_evento)
+        db.session.commit()
+        return jsonify({
+            "message": f"Comando de {comando} enviado com sucesso!",
+            "novo_status": novo_status
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Erro ao processar comando: {str(e)}"}), 500
+
+@veiculo_bp.route("/veiculos/<int:id>/status_ignicao", methods=["GET"])
+def status_ignicao(id):
+    veiculo = Veiculo.query.get(id)
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    logs = LogComando.query.filter_by(veiculo_id=id).order_by(LogComando.timestamp.desc()).limit(10).all()
+    
+    logs_data = []
+    for log in logs:
+        logs_data.append({
+            "data_hora": log.timestamp.strftime("%d/%m/%Y %H:%M"),
+            "acao": log.comando,
+            "origem": log.origem,
+            "status": log.status
+        })
+
+    status_text = "Ligada" if veiculo.status_ignicao else "Cortada"
+    
+    return jsonify({
+        "status_atual": status_text,
+        "logs": logs_data
+    })

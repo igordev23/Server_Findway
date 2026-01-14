@@ -39,6 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       const msg = data?.error || `Erro ao chamar ${url}`;
+      if (res.status === 403) {
+        window.location.replace("/pagamento-pendente");
+        return {};
+      }
       throw new Error(msg);
     }
     return res.json();

@@ -17,7 +17,7 @@
     <nav id="clientMenu" class="nav nav-pills flex-column">
       <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/home">
         <i class="bi bi-speedometer2"></i>
-        <span>Home (Cliente)</span>
+        <span>Home</span>
       </a>
       <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/cliente/historico-rotas">
         <i class="bi bi-map"></i>
@@ -57,9 +57,14 @@
         <i class="bi bi-people"></i>
         <span>Clientes & veículos</span>
       </a>
-       <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/administradores">
-        <i class="bi bi-person-badge"></i>
-        <span>Administradores</span>
+      <!-- Link visível apenas para Super Admin -->
+      <a id="superAdminLink" class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4 d-none" href="/dev/empresas">
+        <i class="bi bi-building"></i>
+        <span>Gestão de Empresas</span>
+      </a>
+      <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/financeiro">
+        <i class="bi bi-cash-coin"></i>
+        <span>Financeiro</span>
       </a>
       <a class="nav-link text-dark d-flex align-items-center gap-2 py-3 px-4" href="/admin/relatorios">
         <i class="bi bi-clipboard-data"></i>

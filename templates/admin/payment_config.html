@@ -1,0 +1,169 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Configurações de Pagamento{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-credit-card"></i> Configurações de Pagamento</h5>
+        </div>
+        <div class="card-body">
+          <!-- Stripe Connect Status -->
+          <div class="mb-4">
+            <h6><i class="bi bi-link-45deg"></i> Stripe Connect</h6>
+            <div id="stripe-connect-status" class="alert alert-info">
+              <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                  <span class="visually-hidden">Carregando...</span>
+                </div>
+                <span>Verificando status da conta...</span>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <button id="btnConnectStripe" class="btn btn-success">
+                <i class="bi bi-link-45deg"></i> Conectar conta Stripe
+              </button>
+              <button id="btnDisconnectStripe" class="btn btn-outline-danger d-none">
+                <i class="bi bi-x-circle"></i> Desconectar
+              </button>
+            </div>
+          </div>
+
+          <!-- Formas de Pagamento -->
+          <div class="mb-4">
+            <h6><i class="bi bi-credit-card-2-back"></i> Formas de Pagamento Aceitas</h6>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="payment-card" checked>
+                  <label class="form-check-label" for="payment-card">
+                    <i class="bi bi-credit-card"></i> Cartão de Crédito
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="payment-pix" checked>
+                  <label class="form-check-label" for="payment-pix">
+                    <i class="bi bi-qr-code"></i> PIX
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="payment-boleto">
+                  <label class="form-check-label" for="payment-boleto">
+                    <i class="bi bi-barcode"></i> Boleto
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dia de Cobrança -->
+          <div class="mb-4">
+            <h6><i class="bi bi-calendar-date"></i> Dia de Cobrança Mensal</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="billing-day" class="form-label">Dia do mês (1-31)</label>
+                <select id="billing-day" class="form-select">
+                  <option value="1">Dia 1</option>
+                  <option value="5">Dia 5</option>
+                  <option value="10">Dia 10</option>
+                  <option value="15" selected>Dia 15</option>
+                  <option value="20">Dia 20</option>
+                  <option value="25">Dia 25</option>
+                  <option value="30">Dia 30</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="billing-time" class="form-label">Horário</label>
+                <select id="billing-time" class="form-select">
+                  <option value="09:00">09:00</option>
+                  <option value="12:00">12:00</option>
+                  <option value="15:00">15:00</option>
+                  <option value="18:00" selected>18:00</option>
+                  <option value="21:00">21:00</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Taxas e Configurações -->
+          <div class="mb-4">
+            <h6><i class="bi bi-percent"></i> Taxas e Configurações</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="application-fee" class="form-label">Taxa de administração (%)</label>
+                <input type="number" id="application-fee" class="form-control" 
+                       min="0" max="30" step="0.1" value="5.0">
+                <small class="form-text text-muted">Taxa cobrada sobre cada pagamento</small>
+              </div>
+              <div class="col-md-6">
+                <label for="late-fee" class="form-label">Multa por atraso (%)</label>
+                <input type="number" id="late-fee" class="form-control" 
+                       min="0" max="20" step="0.1" value="2.0">
+                <small class="form-text text-muted">Multa aplicada após vencimento</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div class="d-flex gap-2">
+            <button id="btnSaveConfig" class="btn btn-primary">
+              <i class="bi bi-save"></i> Salvar Configurações
+            </button>
+            <button id="btnTestPayment" class="btn btn-outline-info">
+              <i class="bi bi-play-circle"></i> Testar Pagamento
+            </button>
+          </div>
+
+          <!-- Feedback -->
+          <div id="feedback-config" class="mt-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar com informações -->
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light">
+          <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informações</h6>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-success">
+            <h6><i class="bi bi-check-circle"></i> Stripe Connect</h6>
+            <p class="mb-0 small">
+              Conecte sua conta Stripe para receber pagamentos diretamente. 
+              Os clientes pagarão para sua conta, não para a plataforma.
+            </p>
+          </div>
+          
+          <div class="alert alert-info">
+            <h6><i class="bi bi-calendar-check"></i> Cobrança Automática</h6>
+            <p class="mb-0 small">
+              Configure o dia e horário para cobranças mensais automáticas. 
+              O sistema processará todos os pagamentos pendentes.
+            </p>
+          </div>
+
+          <div class="alert alert-warning">
+            <h6><i class="bi bi-shield-check"></i> Segurança</h6>
+            <p class="mb-0 small">
+              Todas as transações são processadas com segurança pelo Stripe. 
+              Sua conta é protegida com os padrões PCI DSS.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script src="{{ url_for('static', filename='assets/js/admin/payment-config.js') }}"></script>
+{% endblock javascripts %}

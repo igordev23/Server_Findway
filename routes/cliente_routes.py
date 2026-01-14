@@ -7,6 +7,7 @@ import pytz
 import firebase_admin
 from firebase_admin import credentials, auth
 import os
+import middlewares
 
 cliente_bp = Blueprint("cliente_bp", __name__)
 br_tz = pytz.timezone("America/Sao_Paulo")
@@ -21,18 +22,33 @@ if not firebase_admin._apps:
 
 @cliente_bp.route("/clientes", methods=["GET"])
 def listar_clientes():
-    clientes = Cliente.query.all()
-    return jsonify([
-        {
-            "id": c.id,
-            "nome": c.nome,
-            "email": c.email,
-            "telefone": c.telefone,
-            "cidade": c.cidade,
-            "estado": c.estado,
-            "administrador_id": c.administrador_id
-        } for c in clientes
-    ])
+    email = middlewares._get_email_from_auth_header()
+    
+    # 1. Tenta identificar Admin
+    if email:
+        from models.administrador import Administrador
+        admin = Administrador.query.filter_by(email=email).first()
+        if admin:
+            # Se for admin, retorna SÓ os clientes dele
+            clientes = Cliente.query.filter_by(administrador_id=admin.id).all()
+            return jsonify([
+                {
+                    "id": c.id,
+                    "nome": c.nome,
+                    "email": c.email,
+                    "telefone": c.telefone,
+                    "cidade": c.cidade,
+                    "estado": c.estado,
+                    "administrador_id": c.administrador_id,
+                    "stripe_customer_id": getattr(c, "stripe_customer_id", None),
+                    "subscription_status": getattr(c, "subscription_status", None),
+                } for c in clientes
+            ])
+
+    # 2. Se não for admin (ou não autenticado), fallback (ou vazio)
+    # Por compatibilidade, se não tiver auth, retorna vazio para não vazar dados
+    # Se quiser manter comportamento antigo ( inseguro), seria query.all(), mas vamos fechar.
+    return jsonify([])
 
 @cliente_bp.route("/clientes/admin/<int:admin_id>", methods=["GET"])
 def listar_clientes_por_admin(admin_id):
@@ -64,7 +80,8 @@ def obter_cliente(id):
         "cidade": cliente.cidade,
         "estado": cliente.estado,
         "cep": cliente.cep,
-        "administrador_id": cliente.administrador_id
+        "administrador_id": cliente.administrador_id,
+        "tem_pin": bool(cliente.pin)
     })
 
 @cliente_bp.route("/clientes", methods=["POST"])
@@ -81,6 +98,11 @@ def criar_cliente():
         estado = data["estado"]
         cep = data["cep"]
         numero = data["numero"]
+        
+        # Campos de pagamento
+        dia_pagamento = data.get("dia_pagamento", 15)
+        plano_nome = data.get("plano_nome")
+        plano_valor = data.get("plano_valor")
 
         # Cria usuário no Firebase
         firebase_user = auth.create_user(
@@ -103,8 +125,15 @@ def criar_cliente():
             cidade=cidade,
             estado=estado,
             cep=cep,
-            numero=numero
+            numero=numero,
+            dia_pagamento=dia_pagamento,
+            plano_nome=plano_nome,
+            plano_valor=plano_valor,
+            data_inicio_cobranca=datetime.now(br_tz).date()
         )
+        
+        # Calcula o primeiro vencimento
+        cliente.atualizar_proximo_vencimento()
 
         db.session.add(cliente)
         db.session.commit()
@@ -182,6 +211,7 @@ def atualizar_cliente(id):
     novo_estado = dados.get("estado")
     novo_numero = dados.get("numero")
     novo_cep = dados.get("cep")
+    novo_pin = dados.get("pin")
 
     try:
         # 1️⃣ Atualizar no Firebase (se tiver UID)
@@ -229,6 +259,9 @@ def atualizar_cliente(id):
         if novo_cep:
             cliente.cep = novo_cep
 
+        if novo_pin:
+            cliente.pin = novo_pin
+
         cliente.atualizado_em = datetime.now(br_tz)
 
         db.session.commit()
@@ -261,3 +294,21 @@ def listar_veiculos_por_cliente(id):
         }
         for v in veiculos
     ])
+
+@cliente_bp.route("/clientes/<int:id>/recuperar-pin", methods=["POST"])
+def recuperar_pin(id):
+    cliente = Cliente.query.get(id)
+    if not cliente:
+        return jsonify({"error": "Cliente não encontrado"}), 404
+    
+    if not cliente.pin:
+        return jsonify({"error": "PIN não configurado para este cliente."}), 400
+
+    # Simulação de envio de email
+    print(f"==================================================")
+    print(f"[EMAIL SIMULATION] Para: {cliente.email}")
+    print(f"Assunto: Recuperação de PIN - Findway")
+    print(f"Mensagem: Olá {cliente.nome}, seu PIN de segurança é: {cliente.pin}")
+    print(f"==================================================")
+
+    return jsonify({"message": f"Um e-mail com o PIN foi enviado para {cliente.email}"}), 200

@@ -98,6 +98,105 @@ document.addEventListener("DOMContentLoaded", () => {
       btnAtualizar.textContent = originalText;
     }
   });
+
+  // --- LÓGICA DO PIN ---
+  const btnSalvarPin = document.getElementById("btnSalvarPinSeguranca");
+  const btnEsqueciPin = document.getElementById("btnEsqueciPin");
+  const inputPinAtual = document.getElementById("inputPinAtual");
+  const inputNovoPin = document.getElementById("inputNovoPin");
+  const inputConfirmarPin = document.getElementById("inputConfirmarPin");
+
+  let clienteId = null;
+
+  if (auth) {
+      auth.onAuthStateChanged(async (user) => {
+          if (user && user.email) {
+              try {
+                  const resp = await fetch("/clientes");
+                  const clientes = await resp.json();
+                  const cliente = clientes.find(c => c.email === user.email);
+                  if (cliente) {
+                      clienteId = cliente.id;
+                  }
+              } catch (e) {
+                  console.error("Erro ao buscar cliente ID", e);
+              }
+          }
+      });
+  }
+
+  if (btnSalvarPin) {
+      btnSalvarPin.addEventListener("click", async () => {
+          if (!clienteId) return alert("Erro: Cliente não identificado. Tente recarregar a página.");
+          
+          const novoPin = inputNovoPin ? inputNovoPin.value : "";
+          const confirmarPin = inputConfirmarPin ? inputConfirmarPin.value : "";
+          
+          if (!novoPin || novoPin.length < 4) {
+              return alert("O novo PIN deve ter pelo menos 4 caracteres.");
+          }
+          if (novoPin !== confirmarPin) {
+              return alert("A confirmação do PIN não confere.");
+          }
+
+          try {
+              btnSalvarPin.disabled = true;
+              btnSalvarPin.textContent = "Salvando...";
+
+              const resp = await fetch(`/clientes/${clienteId}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ pin: novoPin })
+              });
+
+              if (resp.ok) {
+                  alert("PIN atualizado com sucesso!");
+                  if (inputNovoPin) inputNovoPin.value = "";
+                  if (inputConfirmarPin) inputConfirmarPin.value = "";
+                  if (inputPinAtual) inputPinAtual.value = "";
+              } else {
+                  const err = await resp.json();
+                  alert("Erro ao salvar PIN: " + (err.error || "Erro desconhecido"));
+              }
+          } catch (e) {
+              console.error(e);
+              alert("Erro de conexão.");
+          } finally {
+              btnSalvarPin.disabled = false;
+              btnSalvarPin.textContent = "Salvar PIN";
+          }
+      });
+  }
+
+  if (btnEsqueciPin) {
+      btnEsqueciPin.addEventListener("click", async () => {
+          if (!clienteId) return alert("Erro: Cliente não identificado.");
+
+          if (!confirm("Deseja receber seu PIN por e-mail?")) return;
+
+          try {
+              btnEsqueciPin.disabled = true;
+              btnEsqueciPin.textContent = "Enviando...";
+
+              const resp = await fetch(`/clientes/${clienteId}/recuperar-pin`, {
+                  method: "POST"
+              });
+
+              const data = await resp.json();
+              if (resp.ok) {
+                  alert(data.message);
+              } else {
+                  alert("Erro: " + (data.error || "Falha ao enviar e-mail."));
+              }
+          } catch (e) {
+              console.error(e);
+              alert("Erro de conexão.");
+          } finally {
+              btnEsqueciPin.disabled = false;
+              btnEsqueciPin.textContent = "Esqueci meu PIN";
+          }
+      });
+  }
 });
 
 
