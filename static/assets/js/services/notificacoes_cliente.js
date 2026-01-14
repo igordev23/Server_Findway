@@ -50,28 +50,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 
-  // Helper to manage offline read status in LocalStorage
-  function isOfflineRead(placa, timestamp) {
-      const key = `offline_read_${placa}`;
-      const saved = localStorage.getItem(key);
-      return saved === timestamp;
-  }
-
-  function markOfflineRead(placa, timestamp) {
-      const key = `offline_read_${placa}`;
-      localStorage.setItem(key, timestamp);
-  }
-
   function createNotificationCard(id, type, title, time, message, badgeColor, iconClass, isRead) {
     const bgClass = isRead ? 'bg-white' : 'bg-light';
     const dotHtml = isRead ? '' : `<span class="position-absolute top-0 start-0 translate-middle p-1 bg-primary border border-light rounded-circle" style="left: 10px !important; top: 15px !important;"></span>`;
+    const readBtnHtml = isRead ? '' : `<button class="btn btn-link btn-sm text-decoration-none p-0 ms-2" onclick="markAsRead('${id}')" title="Marcar como lida"><i class="bi bi-check-circle"></i></button>`;
     
-    // Cursor pointer indicates clickable
+    // For offline events (no ID in DB yet for this view logic), we handle differently or just show as unread always/never
+    // But user wants db events mainly. For offline logic which is client-computed, we can't persist "read" easily without a real event.
+    // For now, let's assume offline logic is just visual and transient.
+
     return `
-      <div class="list-group-item d-flex align-items-start gap-3 ${bgClass} position-relative" 
-           id="notif-${id}" 
-           onclick="markAsRead('${id}')" 
-           style="cursor: pointer; transition: background-color 0.2s;">
+      <div class="list-group-item d-flex align-items-start gap-3 ${bgClass} position-relative" id="notif-${id}">
         ${dotHtml}
         <div class="rounded-circle p-2 bg-${badgeColor} bg-opacity-10 text-${badgeColor}">
             <i class="${iconClass} fs-5"></i>
@@ -81,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <h6 class="mb-1 fw-bold ${isRead ? 'text-secondary' : 'text-dark'}">${title}</h6>
             <div class="d-flex align-items-center">
                 <small class="text-muted me-2">${time}</small>
+                ${id && id !== 'offline' ? readBtnHtml : ''}
             </div>
           </div>
           <p class="mb-0 text-muted small">
@@ -94,78 +84,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Global function for onclick
   window.markAsRead = async function(id) {
       if(!id) return;
-      
-      // Find notification object
-      const notifIndex = allNotifications.findIndex(n => n.id == id);
-      if (notifIndex === -1) return;
-      
-      const notif = allNotifications[notifIndex];
-      if (notif.lido) return; // Already read
-
-      // Optimistic UI update
-      notif.lido = true;
-      renderNotifications();
-
-      if (String(id).startsWith('offline_')) {
-          // Handle offline event (Local Storage)
-          const placa = id.split('_')[1];
-          if (notif.rawTimestamp) {
-              markOfflineRead(placa, notif.rawTimestamp);
+      try {
+          const res = await fetch(`/eventos/${id}/ler`, { method: 'POST' });
+          if(res.ok) {
+              // Update local state
+              const notif = allNotifications.find(n => n.id == id);
+              if(notif) notif.lido = true;
+              renderNotifications(); // Re-render to update UI
           }
-      } else {
-          // Handle server event
-          try {
-              const res = await fetch(`/eventos/${id}/ler`, { method: 'POST' });
-              if(!res.ok) {
-                  // Revert if failed
-                  notif.lido = false;
-                  renderNotifications();
-                  console.error("Falha ao marcar como lido no servidor");
-              }
-          } catch(e) {
-              notif.lido = false;
-              renderNotifications();
-              console.error("Erro ao marcar como lido", e);
-          }
+      } catch(e) {
+          console.error("Erro ao marcar como lido", e);
       }
   }
-
-  // Mark All Listener
-  const btnMarkAll = document.getElementById("btnMarkAllRead");
-  if (btnMarkAll) {
-      btnMarkAll.addEventListener("click", async () => {
-          if (!currentUserId) return;
-
-          // 1. Mark server events
-          try {
-              const res = await fetch(`/eventos/cliente/${currentUserId}/ler-todos`, { method: 'POST' });
-              if (res.ok) {
-                  // Update local state for server events
-                  allNotifications.forEach(n => {
-                      if (!String(n.id).startsWith('offline_')) {
-                          n.lido = true;
-                      }
-                  });
-              }
-          } catch (e) {
-              console.error("Erro ao marcar todos como lidos (server)", e);
-          }
-
-          // 2. Mark offline events (Local Storage)
-          allNotifications.forEach(n => {
-              if (String(n.id).startsWith('offline_') && !n.lido) {
-                   n.lido = true;
-                   const placa = n.id.split('_')[1];
-                   if (n.rawTimestamp) {
-                       markOfflineRead(placa, n.rawTimestamp);
-                   }
-              }
-          });
-
-          renderNotifications();
-      });
-  }
-
 
   function renderNotifications() {
       if (allNotifications.length === 0) {
@@ -239,19 +169,17 @@ document.addEventListener("DOMContentLoaded", () => {
           if (statusData.status_gps === "Offline") {
             const timeStr = formatTime(statusData.timestamp);
             const timeAgoStr = timeAgo(statusData.timestamp);
-            const rawTs = statusData.timestamp; // keep raw for localstorage check
             
             tempNotifications.push({
-                id: `offline_${v.placa}`, // Unique ID per vehicle
+                id: 'offline', // Virtual ID
                 tipo: 'offline',
                 title: "Perda de conexão",
                 timeAgo: timeAgoStr,
                 message: `O rastreador ficou offline por mais de 10 segundos. Última posição registrada às ${timeStr}.`,
                 color: "warning",
                 icon: "bi bi-wifi-off",
-                lido: isOfflineRead(v.placa, rawTs),
-                timestamp: new Date(statusData.timestamp),
-                rawTimestamp: rawTs
+                lido: false, // Always unread for now since it's transient
+                timestamp: new Date(statusData.timestamp) // For sorting if needed
             });
           }
         } catch (err) {
@@ -280,14 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
                icon = "bi-stop-circle";
                color = "secondary";
                title = "Veículo parado";
-             } else if (e.tipo === "IGNICAO_CORTADA") {
-               icon = "bi-power";
-               color = "danger";
-               title = "Ignição Cortada";
-             } else if (e.tipo === "IGNICAO_REATIVADA") {
-               icon = "bi-power";
-               color = "success";
-               title = "Ignição Reativada";
              }
              
              tempNotifications.push({
