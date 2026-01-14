@@ -6,6 +6,7 @@ import pytz
 import firebase_admin
 from firebase_admin import credentials, auth
 import os
+import middlewares
 from routes.auth_middleware import require_super_admin
 
 administrador_bp = Blueprint("administrador_bp", __name__)

@@ -16,6 +16,10 @@ const DashboardApi = (() => {
       const error = new Error(data?.error || `Erro ao chamar ${url}`);
       error.status = response.status;
       error.payload = data;
+      if (response.status === 403) {
+        window.location.replace("/pagamento-pendente");
+        return;
+      }
       throw error;
     }
     return data;

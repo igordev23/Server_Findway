@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from models.localizacao import Localizacao
+from middlewares import check_subscription_status
 from models.veiculo import Veiculo
 from models.cliente import Cliente
 from database import db
@@ -15,6 +16,7 @@ br_tz = pytz.timezone("America/Sao_Paulo")
 
 # Listar todas as localizações com dados do veículo (APENAS A ÚLTIMA DE CADA VEÍCULO)
 @localizacao_bp.route("/localizacao", methods=["GET"])
+@check_subscription_status
 def listar_localizacoes():
     # Subquery para pegar o ID da última localização de cada placa
     subquery = db.session.query(
@@ -140,6 +142,7 @@ def criar_localizacao():
         return jsonify({"error": str(e)}), 400
 
 @localizacao_bp.route("/localizacao/historico", methods=["GET"])
+@check_subscription_status
 def historico_localizacao():
     cutoff = datetime.utcnow() - timedelta(hours=24)
     dados = db.session.query(Localizacao, Veiculo).join(
@@ -177,6 +180,7 @@ def historico_localizacao_admin(admin_id):
 
 # Localização mais recente por placa
 @localizacao_bp.route("/localizacao/<placa>", methods=["GET"])
+@check_subscription_status
 def localizacao_por_placa(placa):
     localizacao = Localizacao.query.filter_by(placa=placa).order_by(Localizacao.timestamp.desc()).first()
     if not localizacao:
@@ -185,6 +189,7 @@ def localizacao_por_placa(placa):
 
 # Histórico de 24h por placa ou filtro personalizado
 @localizacao_bp.route("/localizacao/<placa>/historico", methods=["GET"])
+@check_subscription_status
 def historico_por_placa(placa):
     # Parâmetros opcionais para filtro
     data_filtro = request.args.get("data")       # YYYY-MM-DD
@@ -275,6 +280,7 @@ def deletar_localizacoes_24h():
         return jsonify({"error": str(e)}), 500
     
 @localizacao_bp.route("/localizacao/status/<placa>", methods=["GET"])
+@check_subscription_status
 def info_completa(placa):
     veiculo = Veiculo.query.filter_by(placa=placa).first()
     if not veiculo:

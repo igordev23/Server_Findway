@@ -1,0 +1,73 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Financeiro{% endblock title %}
+
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-4">Financeiro</h3>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Stripe Connect</h5>
+          <div id="connectStatus" class="mb-3">
+            <div>Conectado: <span id="csConnected">-</span></div>
+            <div>Account ID: <span id="csAccountId">-</span></div>
+            <div>Charges enabled: <span id="csCharges">-</span></div>
+            <div>Payouts enabled: <span id="csPayouts">-</span></div>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <button id="btnConnectStripe" class="btn btn-primary">Conectar minha conta Stripe</button>
+            <button id="btnDisconnectStripe" class="btn btn-outline-danger btn-sm d-none" title="Resetar conexão">Desconectar</button>
+          </div>
+          <span id="connectFeedback" class="ms-3 text-muted"></span>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Planos Mensais</h5>
+          <div class="d-flex gap-2 mb-3">
+            <button id="btnReloadPrices" class="btn btn-outline-secondary">Recarregar</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Price ID</th>
+                  <th>Valor (R$)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="pricesTableBody">
+                <tr><td colspan="4" class="text-muted">Nenhum plano carregado</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <hr>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <input id="planName" type="text" class="form-control" placeholder="Nome do plano">
+            </div>
+            <div class="col-md-3">
+              <input id="planValue" type="number" step="0.01" class="form-control" placeholder="Valor (R$)">
+            </div>
+            <div class="col-md-3">
+              <button id="btnCreatePlan" class="btn btn-success w-100">Criar plano</button>
+            </div>
+          </div>
+          <div id="createPlanFeedback" class="mt-2 text-muted"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block javascripts %}
+<script src="{{ url_for('static', filename='assets/js/admin/financeiro.js') }}"></script>
+{% endblock javascripts %}
+

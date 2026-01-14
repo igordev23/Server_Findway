@@ -75,12 +75,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchNotifications() {
       if (!currentUserId) return;
+      
+      // Evita chamadas de API desnecessárias se o usuário estiver na tela de pagamento pendente
+      if (window.location.pathname.includes('/pagamento-pendente')) return;
 
       try {
           // 1. Fetch Vehicles (for offline check)
           let veiculos = [];
           try {
-            veiculos = await fetch(`/veiculos/cliente/${currentUserId}`).then(r => r.json());
+            // Use /veiculos endpoint which handles auth internally
+            const resp = await fetch(`/veiculos`);
+            if (resp.status === 403) {
+                 // Inadimplente ou sem permissão - silenciosamente ignora
+                 return; 
+            }
+            if (resp.ok) {
+                veiculos = await resp.json();
+            }
           } catch (e) {}
 
           let allNotifs = [];
