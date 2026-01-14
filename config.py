@@ -21,7 +21,8 @@ class Config:
     STRIPE_DEFAULT_PRICE_ID = os.getenv("STRIPE_DEFAULT_PRICE_ID")
     STRIPE_SUCCESS_URL = os.getenv("STRIPE_SUCCESS_URL", "http://localhost:5000/home?payment=success")
     STRIPE_CANCEL_URL = os.getenv("STRIPE_CANCEL_URL", "http://localhost:5000/pagamento-pendente?payment=canceled")
-    STRIPE_CONNECT_RETURN_URL = os.getenv("STRIPE_CONNECT_RETURN_URL", "http://localhost:5000/admin/dashboard")
-    STRIPE_CONNECT_REFRESH_URL = os.getenv("STRIPE_CONNECT_REFRESH_URL", "http://localhost:5000/admin/dashboard")
+    STRIPE_CONNECT_RETURN_URL = os.getenv("STRIPE_CONNECT_RETURN_URL", "http://localhost:5000/admin/financeiro")
+    STRIPE_CONNECT_REFRESH_URL = os.getenv("STRIPE_CONNECT_REFRESH_URL", "http://localhost:5000/admin/financeiro")
     STRIPE_APPLICATION_FEE_PERCENT = os.getenv("STRIPE_APPLICATION_FEE_PERCENT")
 
+    ASSETS_ROOT = '/static/assets'

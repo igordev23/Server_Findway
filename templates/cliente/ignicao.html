@@ -2,12 +2,16 @@
 
 {% block title %}Controle de Ignição{% endblock %}
 
+{% block javascripts %}
+<script src="{{ url_for('static', filename='assets/js/services/ignicao.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
   <div class="row g-4">
     <div class="col-lg-8">
       <div class="card shadow-sm border-0">
-        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        <div id="ignicao-card-header" class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
           <span><i class="bi bi-power me-2"></i>Status da ignição</span>
           <span class="badge text-bg-light text-danger">Remoto seguro</span>
         </div>
@@ -15,8 +19,8 @@
           <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
             <div>
               <p class="text-muted mb-1">Status atual</p>
-              <h3 class="mb-0">Ligada</h3>
-              <small class="text-muted">Atualizado há 1 minuto</small>
+              <h3 class="mb-0" id="status-texto">Carregando...</h3>
+              <small class="text-muted" id="status-timestamp">Atualizando...</small>
             </div>
             <div class="text-md-end">
               <p class="text-muted mb-1">Último comando</p>
@@ -48,24 +52,9 @@
                   <th>Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="tabela-logs">
                 <tr>
-                  <td>19/11/2025 10:32</td>
-                  <td>Corte da ignição</td>
-                  <td>App Cliente</td>
-                  <td><span class="badge text-bg-success">Confirmado</span></td>
-                </tr>
-                <tr>
-                  <td>18/11/2025 22:14</td>
-                  <td>Reativação</td>
-                  <td>Central</td>
-                  <td><span class="badge text-bg-success">Concluído</span></td>
-                </tr>
-                <tr>
-                  <td>18/11/2025 09:03</td>
-                  <td>Corte</td>
-                  <td>App Cliente</td>
-                  <td><span class="badge text-bg-warning">Pendente</span></td>
+                  <td colspan="4" class="text-center">Carregando logs...</td>
                 </tr>
               </tbody>
             </table>
@@ -76,24 +65,16 @@
 
     <div class="col-lg-4">
       <div class="card shadow-sm border-0">
-        <div class="card-body">
-          <h6 class="fw-semibold mb-3">Proteção adicional</h6>
+        <div class="card-body" id="pin-setup-card-body">
+          <h6 class="fw-semibold mb-3">PIN de confirmação</h6>
           <form>
             <div class="mb-3">
-              <label class="form-label">PIN de confirmação</label>
+              <label class="form-label">4 digitos</label>
               <div class="input-group">
-                <input type="password" class="form-control" placeholder="****">
-                <button class="btn btn-outline-secondary" type="button">Alterar PIN</button>
+                <input type="password" class="form-control" placeholder="****" id="input-config-pin">
+                <button class="btn btn-outline-secondary" type="button" id="btn-salvar-pin">Salvar PIN</button>
               </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Autorização rápida</label>
-              <select class="form-select">
-                <option>Solicitar PIN a cada comando</option>
-                <option>Usar PIN apenas para corte</option>
-              </select>
-            </div>
-            <button class="btn btn-primary w-100" type="button">Salvar preferências</button>
           </form>
         </div>
       </div>
@@ -114,15 +95,11 @@
       </div>
       <div class="modal-body">
         <p>Insira seu PIN para confirmar o bloqueio imediato da moto.</p>
-        <input type="password" class="form-control mb-3" placeholder="****">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="alertarContato">
-          <label class="form-check-label" for="alertarContato">Notificar contatos de emergência</label>
-        </div>
+        <input type="password" class="form-control mb-3" placeholder="****" id="pin-cortar">
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-danger">Confirmar corte</button>
+        <button type="button" class="btn btn-danger" id="btn-confirmar-corte">Confirmar corte</button>
       </div>
     </div>
   </div>
@@ -137,7 +114,8 @@
       </div>
       <div class="modal-body">
         <p>Confirme que o veículo está em local seguro antes de liberar a ignição.</p>
-        <button class="btn btn-outline-primary w-100" type="button">Enviar comando</button>
+        <input type="password" class="form-control mb-3" placeholder="Insira seu PIN" id="pin-reativar">
+        <button class="btn btn-outline-primary w-100" type="button" id="btn-confirmar-reativar">Enviar comando</button>
       </div>
     </div>
   </div>

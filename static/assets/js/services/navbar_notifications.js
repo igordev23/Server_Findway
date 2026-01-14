@@ -75,12 +75,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchNotifications() {
       if (!currentUserId) return;
+      
+      // Evita chamadas de API desnecessárias se o usuário estiver na tela de pagamento pendente
+      if (window.location.pathname.includes('/pagamento-pendente')) return;
 
       try {
           // 1. Fetch Vehicles (for offline check)
           let veiculos = [];
           try {
-            veiculos = await fetch(`/veiculos/cliente/${currentUserId}`).then(r => r.json());
+            // Use /veiculos endpoint which handles auth internally
+            const resp = await fetch(`/veiculos`);
+            if (resp.status === 403) {
+                 // Inadimplente ou sem permissão - silenciosamente ignora
+                 return; 
+            }
+            if (resp.ok) {
+                veiculos = await resp.json();
+            }
           } catch (e) {}
 
           let allNotifs = [];
@@ -181,6 +192,8 @@ document.addEventListener("DOMContentLoaded", () => {
           else if (n.tipo === "ALERTA") { icon = "bi-exclamation-triangle"; color = "text-warning"; }
           else if (n.tipo === "MOVIMENTO") { icon = "bi-exclamation-octagon"; color = "text-danger"; }
           else if (n.tipo === "PARADA") { icon = "bi-stop-circle"; color = "text-secondary"; }
+          else if (n.tipo === "IGNICAO_CORTADA") { icon = "bi-power"; color = "text-danger"; }
+          else if (n.tipo === "IGNICAO_REATIVADA") { icon = "bi-power"; color = "text-success"; }
 
           // Pass raw timestamp for offline handling
           const dataAttr = n.rawTimestamp ? `data-raw-timestamp="${n.rawTimestamp}"` : "";

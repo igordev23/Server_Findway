@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, redirect, url_for
 from models.administrador import Administrador
 from database import db
 from middlewares import _get_email_from_auth_header
+from config import Config
 import stripe
 import os
 
@@ -93,9 +94,8 @@ def stripe_connect_create_link():
             db.session.commit()
 
         # Criar link de conexão Stripe Connect (onboarding ou update)
-        base_url = os.getenv("BASE_URL", "http://localhost:5000")
-        refresh_url = f"{base_url}/admin/financeiro"
-        return_url = f"{base_url}/admin/financeiro?stripe_connected=true"
+        refresh_url = Config.STRIPE_CONNECT_REFRESH_URL
+        return_url = Config.STRIPE_CONNECT_RETURN_URL
         
         account_link = stripe.AccountLink.create(
             account=account_id,

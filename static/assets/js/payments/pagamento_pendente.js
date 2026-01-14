@@ -19,19 +19,39 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function getAuthAndEmail() {
-    try {
-      const cfgEl = document.getElementById("firebase-config");
-      if (!cfgEl || typeof firebase === "undefined") return { token: null, email: null };
-      const cfg = JSON.parse(cfgEl.textContent);
-      if (!firebase.apps.length) firebase.initializeApp(cfg);
-      const auth = firebase.auth();
-      const user = auth.currentUser;
-      if (!user) return { token: null, email: null };
-      const token = await user.getIdToken();
-      return { token, email: user.email || null };
-    } catch (e) {
-      return { token: null, email: null };
-    }
+    return new Promise((resolve) => {
+       const cfgEl = document.getElementById("firebase-config");
+       if (!cfgEl || typeof firebase === "undefined") {
+           return resolve({ token: null, email: null });
+       }
+       const cfg = JSON.parse(cfgEl.textContent);
+       if (!firebase.apps.length) firebase.initializeApp(cfg);
+
+       // Se já tiver usuário carregado, retorna direto
+       if (firebase.auth().currentUser) {
+           firebase.auth().currentUser.getIdToken().then(token => {
+               resolve({ token, email: firebase.auth().currentUser.email });
+           }).catch(() => resolve({ token: null, email: null }));
+           return;
+       }
+
+       const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+           unsubscribe();
+           if (user) {
+               try {
+                   const token = await user.getIdToken();
+                   resolve({ token, email: user.email });
+               } catch(e) { resolve({ token: null, email: null }); }
+           } else {
+               resolve({ token: null, email: null });
+           }
+       });
+       
+       // Timeout de segurança (4s)
+       setTimeout(() => {
+           resolve({ token: null, email: null });
+       }, 4000);
+    });
   }
 
   async function resolveCustomerIdByEmail(email) {
@@ -55,6 +75,17 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
   }
+  
+  // Função de logout discreta
+  window.doLogout = async function(e) {
+      if(e) e.preventDefault();
+      try {
+          await getAuthAndEmail();
+          await firebase.auth().signOut();
+      } catch(err) { console.error(err); }
+      document.cookie = "firebase_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+      window.location.href = "/login";
+  };
 
   async function loadPrices() {
     try {
@@ -66,6 +97,9 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
           const authData = await getAuthAndEmail();
           token = authData.token;
+          // Mostra email logado
+          const emailDisplay = document.getElementById("userEmailDisplay");
+          if(emailDisplay && authData.email) emailDisplay.textContent = authData.email;
       } catch (e) {
           // Usuário não autenticado, segue sem token
       }
@@ -109,15 +143,9 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
       <h3 class="mb-2">Confirmando pagamento...</h3>
       <p class="text-muted mb-4">Aguarde enquanto validamos sua assinatura.</p>
-      <button id="btnForceHome" class="btn btn-outline-primary" style="display:none">Ir para Home</button>
     `;
     document.body.appendChild(overlay);
     
-    // Botão de escape caso demore muito
-    const btnForce = overlay.querySelector("#btnForceHome");
-    btnForce.onclick = () => window.location.href = "/home?payment=success";
-    setTimeout(() => { btnForce.style.display = "inline-block"; }, 10000); // Aparece após 10s
-
     let attempts = 0;
     const maxAttempts = 60; // ~2 minutos (60 * 2s)
     const sessionId = urlParams.get("session_id");
@@ -169,14 +197,14 @@ document.addEventListener("DOMContentLoaded", () => {
           // Tenta buscar a última sessão do usuário via API (recuperação automática)
           updateDebug("Buscando última sessão...");
           try {
-             const { token } = await getAuthAndEmail();
+             const { token, email } = await getAuthAndEmail();
              if (token) {
                  const r = await fetch("/payments/my-latest-session", {
                      headers: { "Authorization": `Bearer ${token}` }
                  });
                  if (r.ok) {
                      const d = await r.json();
-                     updateDebug(`Última sessão: ${d.payment_status}`);
+                     updateDebug(`Última sessão: ${d.payment_status || "não encontrada"}`);
                      if (d.payment_status === "paid") {
                          clearInterval(interval);
                          overlay.innerHTML = `
@@ -186,6 +214,26 @@ document.addEventListener("DOMContentLoaded", () => {
                          `;
                          setTimeout(() => { window.location.href = "/home?payment=success"; }, 1500);
                          return;
+                     } else if (d.payment_status === "no_session" || d.payment_status === "no_customer_id") {
+                         // Se após 15 tentativas (30 segundos) ainda não achou nada, sugere troca de conta
+                         if (attempts > 15) {
+                             clearInterval(interval);
+                             overlay.innerHTML = `
+                                <div class="mb-3 text-danger" style="font-size: 3rem;"><i class="bi bi-x-circle-fill"></i></div>
+                                <h3 class="mb-2">Pagamento não encontrado</h3>
+                                <p class="text-muted mb-2 px-3">
+                                  Não encontramos pagamento para o email <strong>${email}</strong>.
+                                </p>
+                                <p class="small text-muted mb-4 px-3">
+                                  Você pode ter pago usando outro email. Verifique se está logado na conta correta.
+                                </p>
+                                <div class="d-flex gap-2 justify-content-center">
+                                  <button onclick="doLogout(event)" class="btn btn-outline-danger">Sair e Trocar de Conta</button>
+                                  <button onclick="window.location.reload()" class="btn btn-primary">Tentar Novamente</button>
+                                </div>
+                             `;
+                             return;
+                         }
                      }
                  }
              }
@@ -194,9 +242,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 2. Fallback: verifica status do cliente via API
       try {
-        const { email } = await getAuthAndEmail();
+        const { email, token } = await getAuthAndEmail();
         if (email) { 
-             const res = await fetch("/clientes");
+             const res = await fetch("/clientes", {
+                 headers: token ? { "Authorization": `Bearer ${token}` } : {}
+             });
              if (res.ok) {
                  const list = await res.json();
                  if (Array.isArray(list)) {
@@ -206,16 +256,16 @@ document.addEventListener("DOMContentLoaded", () => {
                          if (!sessionId) updateDebug(`Cliente encontrado. Status: ${me.subscription_status}`);
                          
                          if (me.subscription_status === "ativo") {
-                             clearInterval(interval);
-                             overlay.innerHTML = `
-                                 <div class="mb-3 text-success" style="font-size: 3rem;"><i class="bi bi-check-circle-fill"></i></div>
-                                 <h3 class="mb-2">Pagamento Confirmado!</h3>
-                                 <p class="text-muted">Redirecionando...</p>
-                             `;
-                             setTimeout(() => {
-                                 window.location.href = "/home?payment=success";
-                             }, 1500);
-                             return;
+                            clearInterval(interval);
+                            overlay.innerHTML = `
+                              <div class="mb-3 text-success" style="font-size: 3rem;"><i class="bi bi-check-circle-fill"></i></div>
+                              <h3 class="mb-2">Pagamento Confirmado!</h3>
+                              <p class="text-muted">Redirecionando...</p>
+                            `;
+                            setTimeout(() => {
+                              window.location.href = "/home?payment=success";
+                            }, 1500);
+                            return;
                          }
                      }
                  }
@@ -235,7 +285,6 @@ document.addEventListener("DOMContentLoaded", () => {
            <p class="text-muted mb-4">O pagamento pode levar alguns instantes para compensar.</p>
            <div class="d-flex gap-2 justify-content-center">
              <button onclick="window.location.reload()" class="btn btn-primary">Tentar novamente</button>
-             <button onclick="window.location.href='/home'" class="btn btn-outline-secondary">Ir para Home (se liberado)</button>
            </div>
         `;
       }

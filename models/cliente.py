@@ -15,6 +15,7 @@ class Cliente(Usuario):
     estado = db.Column(db.String(255), nullable=False)
     cep = db.Column(db.String(255), nullable=False)
     numero = db.Column(db.String(255), nullable=False)
+    pin = db.Column(db.String(4), nullable=True) # PIN de 4 dígitos
 
      # Stripe 
     stripe_customer_id = db.Column(db.String(255), unique=True, nullable=True)

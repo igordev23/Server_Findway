@@ -64,6 +64,15 @@ def login():
         return render_with_firebase("login.html")
     return render_with_firebase("login.html")
 
+@app.route("/logout", methods=["GET"])
+def logout():
+    # Renderiza template que limpa cookies e redireciona
+    return render_with_firebase("login.html") # O JS do login lida com limpar auth se chamado explicitamente ou podemos limpar cookie aqui
+
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    return render_with_firebase("reset_password.html")
 
 @app.route("/")
 def index():

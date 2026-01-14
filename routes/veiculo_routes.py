@@ -5,11 +5,10 @@ from models.veiculo import Veiculo
 from models.cliente import Cliente
 from models.administrador import Administrador
 from models.localizacao import Localizacao 
+from models.log_comando import LogComando
 from datetime import datetime
 import pytz
-
-
-
+import models.evento as evento
 
 br_tz = pytz.timezone("America/Sao_Paulo")
 veiculo_bp = Blueprint("veiculo_bp", __name__)
@@ -293,7 +292,7 @@ def listar_veiculos_cliente(cliente_id):
             if v.ultima_atualizacao:
                 delta = agora - v.ultima_atualizacao
                 status_gps = "Online" if delta.total_seconds() <= 9 else "Offline"
-            
+        
         resposta.append({
             "id": v.id,
             "placa": v.placa,
@@ -303,9 +302,9 @@ def listar_veiculos_cliente(cliente_id):
             "status_gps": status_gps,
             "status_ignicao": v.status_ignicao,
             "ativo": v.ativo,
-            "cliente_id": v.cliente_id,
-            "cliente_nome": v.cliente.nome if v.cliente else None
+            "cliente_id": v.cliente_id
         })
+
     return jsonify(resposta)
 
 @veiculo_bp.route("/veiculo/<placa>", methods=["DELETE"])
@@ -319,3 +318,96 @@ def deletar_veiculo_placa(placa):
     db.session.commit()
 
     return jsonify({"message": "Veículo e localizações removidas"})
+
+# ==========================================
+#  CONTROLE DE IGNIÇÃO
+# ==========================================
+
+@veiculo_bp.route("/veiculos/<int:id>/comando", methods=["POST"])
+def enviar_comando(id):
+    veiculo = Veiculo.query.get(id)
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    data = request.json
+    comando = data.get("comando")  # "cortar" ou "reativar"
+    pin = str(data.get("pin", "")).strip()
+    cliente_id = data.get("cliente_id")
+
+    if not comando or comando not in ["cortar", "reativar"]:
+        return jsonify({"error": "Comando inválido"}), 400
+
+    if not cliente_id:
+        return jsonify({"error": "ID do cliente não fornecido"}), 400
+
+    cliente = Cliente.query.get(cliente_id)
+    if not cliente:
+        return jsonify({"error": "Cliente não encontrado"}), 404
+
+    # Verifica PIN
+    if not cliente.pin:
+         return jsonify({"error": "PIN de segurança não configurado. Configure no seu perfil."}), 403
+
+    if cliente.pin != pin:
+        return jsonify({"error": "PIN incorreto"}), 403
+
+    # Executa comando (Atualiza estado e Log)
+    # True = Ligada (Ativada/Verde), False = Cortada (Desativada/Vermelho)
+    novo_status = False if comando == "cortar" else True
+    veiculo.status_ignicao = novo_status
+    veiculo.ultima_atualizacao = datetime.now(br_tz)
+
+    log = LogComando(
+        veiculo_id=veiculo.id,
+        comando="Corte de ignição" if comando == "cortar" else "Reativação da ignição",
+        origem="App Cliente",
+        status="Confirmado", 
+        timestamp=datetime.now(br_tz)
+    )
+
+    # Notificação de Evento
+    tipo_evento = "IGNICAO_CORTADA" if comando == "cortar" else "IGNICAO_REATIVADA"
+    desc_evento = "Ignição cortada remotamente pelo usuário" if comando == "cortar" else "Ignição reativada remotamente pelo usuário"
+    
+    novo_evento = evento.Evento(
+        veiculo_id=veiculo.id,
+        tipo=tipo_evento,
+        descricao=desc_evento,
+        timestamp=datetime.now(br_tz)
+    )
+
+    try:
+        db.session.add(log)
+        db.session.add(novo_evento)
+        db.session.commit()
+        return jsonify({
+            "message": f"Comando de {comando} enviado com sucesso!",
+            "novo_status": novo_status
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Erro ao processar comando: {str(e)}"}), 500
+
+@veiculo_bp.route("/veiculos/<int:id>/status_ignicao", methods=["GET"])
+def status_ignicao(id):
+    veiculo = Veiculo.query.get(id)
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    logs = LogComando.query.filter_by(veiculo_id=id).order_by(LogComando.timestamp.desc()).limit(10).all()
+    
+    logs_data = []
+    for log in logs:
+        logs_data.append({
+            "data_hora": log.timestamp.strftime("%d/%m/%Y %H:%M"),
+            "acao": log.comando,
+            "origem": log.origem,
+            "status": log.status
+        })
+
+    status_text = "Ligada" if veiculo.status_ignicao else "Cortada"
+    
+    return jsonify({
+        "status_atual": status_text,
+        "logs": logs_data
+    })

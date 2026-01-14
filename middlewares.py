@@ -23,11 +23,25 @@ def _init_firebase_admin():
 def _get_email_from_auth_header():
     try:
         _init_firebase_admin()
+        
+        # 1. Tenta pegar do header Authorization (prioridade para API - mais específico)
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header.split(" ", 1)[1]
-            decoded = auth.verify_id_token(token)
-            return decoded.get("email")
+            try:
+                decoded = auth.verify_id_token(token)
+                return decoded.get("email")
+            except Exception:
+                pass # Token inválido no header, tenta cookie
+
+        # 2. Tenta pegar do cookie (fallback para navegação web)
+        token = request.cookies.get("firebase_token")
+        if token:
+            try:
+                decoded = auth.verify_id_token(token)
+                return decoded.get("email")
+            except Exception:
+                pass # Token inválido ou expirado no cookie
     except Exception:
         return None
     return None
@@ -87,6 +101,9 @@ def check_payment_status(f):
             if user and getattr(user, "tipo_usuario", None) == "administrador":
                 return f(*args, **kwargs)
             
+            # Força atualização da sessão do banco para garantir dados frescos
+            db.session.expire_all()
+            
             # Verifica status do cliente
             cliente = Cliente.query.filter_by(email=email).first()
             if cliente:
@@ -94,34 +111,38 @@ def check_payment_status(f):
                 session_id = request.args.get("session_id")
                 payment_status_param = request.args.get("payment")
                 
-                if payment_status_param == "success" and session_id:
-                    try:
-                        stripe.api_key = os.getenv("STRIPE_API_KEY")
-                        print(f"[DEBUG] Verificando sessão {session_id} no middleware...")
-                        session = stripe.checkout.Session.retrieve(session_id)
-                        
-                        # Verifica se a sessão pertence ao usuário logado para evitar fraudes
-                        sess_customer = session.get("customer")
-                        sess_email = session.get("customer_email") or (session.get("customer_details") or {}).get("email")
-                        
-                        is_owner = False
-                        if sess_customer and sess_customer == cliente.stripe_customer_id:
-                            is_owner = True
-                        elif sess_email and sess_email == cliente.email:
-                            is_owner = True
+                # Se houver indicação de sucesso na URL, tenta validar a sessão imediatamente
+                if payment_status_param == "success":
+                    # Se tiver session_id na URL, valida via Stripe
+                    if session_id:
+                        try:
+                            stripe.api_key = os.getenv("STRIPE_API_KEY")
+                            print(f"[DEBUG] Verificando sessão {session_id} no middleware...")
+                            session = stripe.checkout.Session.retrieve(session_id)
                             
-                        if is_owner and session.get("payment_status") == "paid":
-                            print(f"[DEBUG] Pagamento confirmado na sessão {session_id}. Liberando cliente {email}.")
-                            cliente.subscription_status = "ativo"
-                            cliente.registrar_pagamento()
-                            db.session.commit()
-                            # Redireciona para a mesma URL sem query params para efetivar o acesso limpo
-                            return redirect(request.path)
-                        elif not is_owner:
-                            print(f"[DEBUG] Sessão {session_id} não pertence ao usuário {email}. Ignorando.")
+                            sess_customer = session.get("customer")
+                            sess_email = session.get("customer_email") or (session.get("customer_details") or {}).get("email")
                             
-                    except Exception as e:
-                        print(f"[DEBUG] Erro ao validar sessão no middleware: {e}")
+                            is_owner = False
+                            if sess_customer and sess_customer == cliente.stripe_customer_id:
+                                is_owner = True
+                            elif sess_email and sess_email == cliente.email:
+                                is_owner = True
+                                
+                            if is_owner and session.get("payment_status") == "paid":
+                                print(f"[DEBUG] Pagamento confirmado na sessão {session_id}. Liberando cliente {email}.")
+                                cliente.subscription_status = "ativo"
+                                cliente.registrar_pagamento()
+                                db.session.commit()
+                                # Redireciona limpo para home
+                                return redirect("/home")
+                        except Exception as e:
+                            print(f"[DEBUG] Erro ao validar sessão no middleware: {e}")
+                    
+                    # Se não tiver session_id mas tiver success, confia no banco se já estiver ativo
+                    # (já que a rota /payments/my-latest-session pode ter atualizado antes)
+                    elif cliente.subscription_status == "ativo":
+                         return redirect("/home")
 
                 # Usa o novo método de verificação de pagamento
                 status_pagamento_em_dia = cliente.verificar_status_pagamento()
