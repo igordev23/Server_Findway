@@ -68,6 +68,9 @@ def listar_localizacoes_cliente(cliente_id):
 
     return jsonify(resultado)
 
+from utils.event_helper import process_vehicle_events
+import pytz
+
 # Criar uma nova localização para um veículo existente
 @localizacao_bp.route("/localizacao", methods=["POST"])
 def criar_localizacao():
@@ -75,12 +78,25 @@ def criar_localizacao():
     placa = data.get("placa")
     latitude = data.get("latitude")
     longitude = data.get("longitude")
-    timestamp = data.get("timestamp")
+    timestamp_str = data.get("timestamp") # Pode vir string ou datetime
 
     # Verifica se o veículo existe
     veiculo = Veiculo.query.filter_by(placa=placa).first()
     if not veiculo:
         return jsonify({"error": "Veículo não encontrado para a placa fornecida"}), 404
+
+    # Tratamento de timestamp
+    if isinstance(timestamp_str, str):
+        try:
+            timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+        except:
+            timestamp = datetime.now(br_tz)
+    else:
+        timestamp = datetime.now(br_tz)
+        
+    # Processar Eventos (Movimento/Parada) ANTES de salvar a nova localização
+    # para comparar com a anterior corretamente
+    process_vehicle_events(veiculo, latitude, longitude, timestamp)
 
     # Atualiza timestamp do veículo para ficar online
     veiculo.ultima_atualizacao = datetime.now(br_tz)
