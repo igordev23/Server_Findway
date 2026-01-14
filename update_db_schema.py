@@ -11,7 +11,6 @@ def upgrade_database():
     with engine.connect() as conn:
         inspector = inspect(engine)
         
-        # 1. Atualizações na tabela Cliente
         print("\nVerificando tabela 'Cliente'...")
         columns_cliente = [col['name'] for col in inspector.get_columns('Cliente')]
         
@@ -41,7 +40,20 @@ def upgrade_database():
             else:
                 print(f"✅ Coluna '{col_name}' já existe.")
 
-        # 2. Atualizações na tabela Evento
+        print("\nVerificando tabela 'Administrador'...")
+        columns_admin = [col['name'] for col in inspector.get_columns('Administrador')]
+        
+        if 'stripe_connected_account_id' not in columns_admin:
+            print("⚠️  Adicionando coluna 'stripe_connected_account_id' na tabela 'Administrador'...")
+            try:
+                conn.execute(text('ALTER TABLE "Administrador" ADD COLUMN stripe_connected_account_id VARCHAR(255) UNIQUE'))
+                conn.commit()
+                print("✅ Coluna 'stripe_connected_account_id' adicionada com sucesso!")
+            except Exception as e:
+                print(f"❌ Erro ao adicionar coluna 'stripe_connected_account_id': {e}")
+        else:
+            print("✅ Coluna 'stripe_connected_account_id' já existe.")
+
         print("\nVerificando tabela 'Evento'...")
         columns_evento = [col['name'] for col in inspector.get_columns('Evento')]
         
