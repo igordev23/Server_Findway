@@ -8,6 +8,8 @@ import firebase_admin
 from firebase_admin import credentials, auth
 import os
 import middlewares
+from flask_mail import Message
+from mail_service import mail
 
 cliente_bp = Blueprint("cliente_bp", __name__)
 br_tz = pytz.timezone("America/Sao_Paulo")
@@ -45,9 +47,24 @@ def listar_clientes():
                 } for c in clientes
             ])
 
-    # 2. Se não for admin (ou não autenticado), fallback (ou vazio)
-    # Por compatibilidade, se não tiver auth, retorna vazio para não vazar dados
-    # Se quiser manter comportamento antigo ( inseguro), seria query.all(), mas vamos fechar.
+        # 2. Se não é admin, verifica se é o próprio CLIENTE
+        cliente = Cliente.query.filter_by(email=email).first()
+        if cliente:
+            return jsonify([
+                {
+                    "id": cliente.id,
+                    "nome": cliente.nome,
+                    "email": cliente.email,
+                    "telefone": cliente.telefone,
+                    "cidade": cliente.cidade,
+                    "estado": cliente.estado,
+                    "administrador_id": cliente.administrador_id,
+                    "stripe_customer_id": getattr(cliente, "stripe_customer_id", None),
+                    "subscription_status": getattr(cliente, "subscription_status", None),
+                }
+            ])
+
+    # 3. Se não autenticado ou não encontrado, retorna vazio
     return jsonify([])
 
 @cliente_bp.route("/clientes/admin/<int:admin_id>", methods=["GET"])
@@ -304,11 +321,12 @@ def recuperar_pin(id):
     if not cliente.pin:
         return jsonify({"error": "PIN não configurado para este cliente."}), 400
 
-    # Simulação de envio de email
-    print(f"==================================================")
-    print(f"[EMAIL SIMULATION] Para: {cliente.email}")
-    print(f"Assunto: Recuperação de PIN - Findway")
-    print(f"Mensagem: Olá {cliente.nome}, seu PIN de segurança é: {cliente.pin}")
-    print(f"==================================================")
-
-    return jsonify({"message": f"Um e-mail com o PIN foi enviado para {cliente.email}"}), 200
+    try:
+        msg = Message("Recuperação de PIN - Findway",
+                      recipients=[cliente.email])
+        msg.body = f"Olá {cliente.nome},\n\nSeu PIN de segurança é: {cliente.pin}\n\nAtenciosamente,\nEquipe Findway"
+        mail.send(msg)
+        return jsonify({"message": f"Um e-mail com o PIN foi enviado para {cliente.email}"}), 200
+    except Exception as e:
+        print(f"Erro ao enviar email: {e}")
+        return jsonify({"error": "Erro ao enviar o e-mail. Verifique as configurações ou tente novamente mais tarde."}), 500
