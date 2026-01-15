@@ -61,5 +61,6 @@ CREATE TABLE IF NOT EXISTS "Evento" (
     "tipo" varchar(50) NOT NULL,
     "descricao" varchar(255) NOT NULL,
     "timestamp" timestamp with time zone NOT NULL,
+    "lido" boolean DEFAULT FALSE,
     FOREIGN KEY ("veiculo_id") REFERENCES "Veiculo" ("id") ON DELETE CASCADE
 );

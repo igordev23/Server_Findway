@@ -9,6 +9,17 @@ from utils.event_helper import process_vehicle_events
 
 mensagens_bp = Blueprint('mensagens_bp', __name__)
 
+from flask import Blueprint, request, jsonify
+from models.localizacao import Localizacao
+from models.veiculo import Veiculo
+from database import db
+from datetime import datetime
+import re
+import pytz
+from utils.event_helper import process_vehicle_events
+
+mensagens_bp = Blueprint('mensagens_bp', __name__)
+
 @mensagens_bp.route("/mensagem", methods=["GET"])
 def receber_mensagem():
     mensagem = request.args.get("msg")
@@ -17,51 +28,64 @@ def receber_mensagem():
 
     print(f"Mensagem recebida: {mensagem}")
 
-    # Regex para extrair placa, latitude e longitude
-    padrao = r"placa=([A-Z0-9]+), latitude=([-+]?\d*\.\d+|\d+), longitude=([-+]?\d*\.\d+|\d+)"
+    # ======================================
+    # 🛰️ GPS
+    # ======================================
+    padrao = (
+        r"placa=([A-Z0-9]+),\s*"
+        r"latitude=([-+]?\d*\.\d+|\d+),\s*"
+        r"longitude=([-+]?\d*\.\d+|\d+)"
+    )
+
     match = re.search(padrao, mensagem)
     if not match:
-        return jsonify({"error": "Não conseguiu extrair placa/lat/lng da mensagem"}), 400
+        return jsonify({"error": "Formato inválido"}), 400
 
     placa = match.group(1)
     lat = float(match.group(2))
     lng = float(match.group(3))
 
-    # Verifica se o veículo existe
     veiculo = Veiculo.query.filter_by(placa=placa).first()
     if not veiculo:
-        return jsonify({"error": f"Veículo não encontrado para a placa {placa}"}), 404
+        return jsonify({"error": f"Veículo {placa} não encontrado"}), 404
 
-    # Usar timezone de Brasília
-    fuso_brasilia = pytz.timezone("America/Sao_Paulo")
-    timestamp_brasilia = datetime.now(fuso_brasilia)
+    fuso = pytz.timezone("America/Sao_Paulo")
+    timestamp = datetime.now(fuso)
 
-    # Processar Eventos (Movimento/Parada)
-    process_vehicle_events(veiculo, lat, lng, timestamp_brasilia)
+    # =====================================================
+    # 🔒 TRAVA ABSOLUTA DO STATUS DA IGNIÇÃO
+    # =====================================================
+    status_ignicao_original = veiculo.status_ignicao
 
-     # Atualiza status do veículo (ONLINE)
-    # veiculo.status_ignicao = True # Removido para deixar o helper decidir baseado na velocidade
-    veiculo.ultima_atualizacao = timestamp_brasilia
+    # Atualiza somente último contato
+    veiculo.ultima_atualizacao = timestamp
 
-    # Criar entrada GPS
+    # Salva GPS
     gps_entry = Localizacao(
         placa=placa,
         latitude=lat,
         longitude=lng,
-        timestamp=timestamp_brasilia
+        timestamp=timestamp
     )
+
+    # Pode gerar eventos, mas NÃO pode alterar ignição
+    process_vehicle_events(veiculo, lat, lng, timestamp)
+
+    # 🔒 RESTAURA O VALOR ORIGINAL (proteção final)
+    veiculo.status_ignicao = status_ignicao_original
 
     try:
         db.session.add(gps_entry)
         db.session.commit()
+
         return jsonify({
-            "status": "ok",
+            "type": "gps",
             "placa": placa,
             "latitude": lat,
             "longitude": lng,
-            "timestamp": gps_entry.timestamp.isoformat(),
-            "veiculo_status": "Online"
-        }), 201
+            "status_ignicao": status_ignicao_original
+        }), 200
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": str(e)}), 500

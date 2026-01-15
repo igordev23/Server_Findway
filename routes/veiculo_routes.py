@@ -245,9 +245,9 @@ def deletar_veiculo_placa(placa):
 #  CONTROLE DE IGNIÇÃO
 # ==========================================
 
-@veiculo_bp.route("/veiculos/<int:id>/comando", methods=["POST"])
-def enviar_comando(id):
-    veiculo = Veiculo.query.get(id)
+@veiculo_bp.route("/veiculos/<placa>/comando", methods=["POST"])
+def enviar_comando_por_placa(placa):
+    veiculo = Veiculo.query.filter_by(placa=placa).first()
     if not veiculo:
         return jsonify({"error": "Veículo não encontrado"}), 404
 
@@ -309,6 +309,24 @@ def enviar_comando(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Erro ao processar comando: {str(e)}"}), 500
+
+
+@veiculo_bp.route("/veiculos/comando/ignicao", methods=["GET"])
+def obter_comando_ignicao():
+    placa = request.args.get("placa")
+    if not placa:
+        return jsonify({"error": "Placa não informada"}), 400
+
+    veiculo = Veiculo.query.filter_by(placa=placa).first()
+    if not veiculo:
+        return jsonify({"error": "Veículo não encontrado"}), 404
+
+    return jsonify({
+        "placa": placa,
+        "state": "on" if veiculo.status_ignicao else "off"
+    }), 200
+
+
 
 @veiculo_bp.route("/veiculos/<int:id>/status_ignicao", methods=["GET"])
 def status_ignicao(id):
