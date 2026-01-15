@@ -55,10 +55,28 @@ function initMap() {
     // Remove placeholder content
     mapElement.innerHTML = "";
 
+    let mapType = "roadmap";
+    let showTraffic = true;
+    if (window.FWPreferences && typeof window.FWPreferences.getMapPreferences === "function") {
+        const prefs = window.FWPreferences.getMapPreferences();
+        if (prefs && prefs.mapType) {
+            mapType = prefs.mapType;
+        }
+        if (typeof prefs.showTraffic === "boolean") {
+            showTraffic = prefs.showTraffic;
+        }
+    }
+
     map = new google.maps.Map(mapElement, {
-        center: { lat: -23.5505, lng: -46.6333 }, // Centro em SP (padrão)
+        center: { lat: -23.5505, lng: -46.6333 },
         zoom: 10,
+        mapTypeId: mapType,
     });
+
+    if (showTraffic && google.maps && typeof google.maps.TrafficLayer === "function") {
+        const trafficLayer = new google.maps.TrafficLayer();
+        trafficLayer.setMap(map);
+    }
 }
 
 function waitForAuth() {
@@ -135,7 +153,7 @@ async function carregarTrajeto() {
     const fim = document.getElementById("filtroHoraFim").value;
 
     if (!placa) {
-        alert("Por favor, selecione um veículo.");
+        Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Por favor, selecione um veículo.' });
         return;
     }
 
@@ -158,7 +176,7 @@ async function carregarTrajeto() {
         
         if (!res.ok) {
             if (res.status === 404) {
-                 alert("Nenhum histórico encontrado para este período.");
+                 Swal.fire({ icon: 'info', title: 'Info', text: 'Nenhum histórico encontrado para este período.' });
                  clearMap();
                  updateStats(null);
                  return;
@@ -168,7 +186,7 @@ async function carregarTrajeto() {
 
         const locations = await res.json();
         if (!locations || locations.length === 0) {
-            alert("Nenhum histórico encontrado para este período.");
+            Swal.fire({ icon: 'info', title: 'Info', text: 'Nenhum histórico encontrado para este período.' });
             clearMap();
             updateStats(null);
             return;
@@ -180,7 +198,7 @@ async function carregarTrajeto() {
 
     } catch (e) {
         console.error(e);
-        alert("Erro ao carregar trajeto: " + e.message);
+        Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao carregar trajeto: ' + e.message });
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -315,7 +333,7 @@ function limparFiltros() {
 
 function exportCSV() {
   if (!lastLocations || lastLocations.length === 0) {
-    alert("Carregue um trajeto antes de exportar.");
+    Swal.fire({ icon: 'info', title: 'Info', text: 'Carregue um trajeto antes de exportar.' });
     return;
   }
   const select = document.getElementById("filtroVeiculo");
@@ -340,7 +358,7 @@ function exportCSV() {
 
 function exportPDF() {
   if (!lastLocations || lastLocations.length === 0) {
-    alert("Carregue um trajeto antes de exportar.");
+    Swal.fire({ icon: 'info', title: 'Info', text: 'Carregue um trajeto antes de exportar.' });
     return;
   }
   const select = document.getElementById("filtroVeiculo");
@@ -422,7 +440,7 @@ function exportPDF() {
   `;
   const win = window.open("", "_blank");
   if (!win) {
-    alert("Popup bloqueado. Autorize popups para exportar PDF.");
+    Swal.fire({ icon: 'warning', title: 'Popup bloqueado', text: 'Autorize popups para exportar o PDF.' });
     return;
   }
   win.document.open();

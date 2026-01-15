@@ -32,10 +32,28 @@ class TempoRealUI {
     initMap() {
         const el = document.getElementById("mapaTempoReal");
         if (!el) return;
+
+        let mapType = "roadmap";
+        let showTraffic = true;
+        if (window.FWPreferences && typeof window.FWPreferences.getMapPreferences === "function") {
+            const prefs = window.FWPreferences.getMapPreferences();
+            if (prefs && prefs.mapType) {
+                mapType = prefs.mapType;
+            }
+            if (typeof prefs.showTraffic === "boolean") {
+                showTraffic = prefs.showTraffic;
+            }
+        }
+
         this.map = new google.maps.Map(el, {
             center: { lat: -23.5, lng: -46.6 },
-            zoom: 13
+            zoom: 13,
+            mapTypeId: mapType,
         });
+        if (showTraffic && google.maps && typeof google.maps.TrafficLayer === "function") {
+            const trafficLayer = new google.maps.TrafficLayer();
+            trafficLayer.setMap(this.map);
+        }
         this.marker = new google.maps.Marker({
             position: { lat: -23.5, lng: -46.6 },
             map: this.map,

@@ -132,7 +132,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function disconnectStripe() {
-      if (!confirm("Tem certeza? Isso removerá a conexão atual e você precisará reconectar.")) return;
+      const confirmResult = await Swal.fire({
+          title: "Desconectar conta Stripe",
+          text: "Tem certeza? Isso removerá a conexão atual e você precisará reconectar.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Sim, desconectar",
+          cancelButtonText: "Cancelar",
+      });
+      if (!confirmResult.isConfirmed) return;
       
       setConnectFeedback("Desconectando...", "info");
       if (btnDisconnect) btnDisconnect.disabled = true;

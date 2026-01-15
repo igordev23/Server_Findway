@@ -3,6 +3,7 @@ from flask import Flask, render_template, redirect, url_for, request, session
 from config import Config
 from database import db
 from dotenv import load_dotenv
+from mail_service import mail
 
 # Importa todos os blueprints
 from routes.localizacao_routes import localizacao_bp
@@ -24,6 +25,7 @@ app.config.from_object(Config)
 
 # Inicializa o banco
 db.init_app(app)
+mail.init_app(app)
 
 app.register_blueprint(localizacao_bp)
 app.register_blueprint(mensagens_bp)

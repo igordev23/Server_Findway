@@ -117,10 +117,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Desconectar Stripe
   btnDisconnect?.addEventListener("click", async () => {
-    if (!confirm("Tem certeza que deseja desconectar sua conta Stripe? Você não receberá mais pagamentos diretos.")) {
+    const confirmResult = await Swal.fire({
+      title: "Desconectar conta Stripe",
+      text: "Tem certeza que deseja desconectar sua conta Stripe? Você não receberá mais pagamentos diretos.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, desconectar",
+      cancelButtonText: "Cancelar",
+    });
+    if (!confirmResult.isConfirmed) {
       return;
     }
-    
     try {
       setFeedback("Desconectando conta Stripe...", "warning");
       btnDisconnect.disabled = true;

@@ -8,3 +8,4 @@ config
 pytz
 firebase-admin
 stripe
+Flask-Mail

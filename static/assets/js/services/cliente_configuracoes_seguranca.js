@@ -127,16 +127,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnSalvarPin) {
       btnSalvarPin.addEventListener("click", async () => {
-          if (!clienteId) return alert("Erro: Cliente não identificado. Tente recarregar a página.");
+          if (!clienteId) return Swal.fire({ icon: 'error', title: 'Erro', text: 'Cliente não identificado. Tente recarregar a página.' });
           
           const novoPin = inputNovoPin ? inputNovoPin.value : "";
           const confirmarPin = inputConfirmarPin ? inputConfirmarPin.value : "";
           
           if (!novoPin || novoPin.length < 4) {
-              return alert("O novo PIN deve ter pelo menos 4 caracteres.");
+              return Swal.fire({ icon: 'warning', title: 'Atenção', text: 'O novo PIN deve ter pelo menos 4 caracteres.' });
           }
           if (novoPin !== confirmarPin) {
-              return alert("A confirmação do PIN não confere.");
+              return Swal.fire({ icon: 'warning', title: 'Atenção', text: 'A confirmação do PIN não confere.' });
           }
 
           try {
@@ -150,17 +150,17 @@ document.addEventListener("DOMContentLoaded", () => {
               });
 
               if (resp.ok) {
-                  alert("PIN atualizado com sucesso!");
+                  Swal.fire({ icon: 'success', title: 'Sucesso', text: 'PIN atualizado com sucesso!' });
                   if (inputNovoPin) inputNovoPin.value = "";
                   if (inputConfirmarPin) inputConfirmarPin.value = "";
                   if (inputPinAtual) inputPinAtual.value = "";
               } else {
                   const err = await resp.json();
-                  alert("Erro ao salvar PIN: " + (err.error || "Erro desconhecido"));
+                  Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao salvar PIN: ' + (err.error || "Erro desconhecido") });
               }
           } catch (e) {
               console.error(e);
-              alert("Erro de conexão.");
+              Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro de conexão.' });
           } finally {
               btnSalvarPin.disabled = false;
               btnSalvarPin.textContent = "Salvar PIN";
@@ -170,9 +170,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnEsqueciPin) {
       btnEsqueciPin.addEventListener("click", async () => {
-          if (!clienteId) return alert("Erro: Cliente não identificado.");
+          if (!clienteId) return Swal.fire({ icon: 'error', title: 'Erro', text: 'Cliente não identificado.' });
 
-          if (!confirm("Deseja receber seu PIN por e-mail?")) return;
+          const confirmResult = await Swal.fire({
+              title: 'Confirmação',
+              text: 'Deseja receber seu PIN por e-mail?',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonText: 'Sim',
+              cancelButtonText: 'Não'
+          });
+          if (!confirmResult.isConfirmed) return;
 
           try {
               btnEsqueciPin.disabled = true;
@@ -184,13 +192,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
               const data = await resp.json();
               if (resp.ok) {
-                  alert(data.message);
+                  Swal.fire({ icon: 'success', title: 'Sucesso', text: data.message });
               } else {
-                  alert("Erro: " + (data.error || "Falha ao enviar e-mail."));
+                  Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro: ' + (data.error || "Falha ao enviar e-mail.") });
               }
           } catch (e) {
               console.error(e);
-              alert("Erro de conexão.");
+              Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro de conexão.' });
           } finally {
               btnEsqueciPin.disabled = false;
               btnEsqueciPin.textContent = "Esqueci meu PIN";

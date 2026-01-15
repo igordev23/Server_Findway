@@ -14,7 +14,7 @@
         <a href="/cliente/configuracoes-seguranca" class="list-group-item list-group-item-action">
           <i class="bi bi-shield-lock me-2"></i>Segurança e Senha
         </a>
-        <a href="#" class="list-group-item list-group-item-action">
+        <a href="/cliente/notificacoes" class="list-group-item list-group-item-action">
           <i class="bi bi-bell me-2"></i>Notificações
         </a>
       </div>
@@ -29,7 +29,7 @@
           <h6 class="mb-0 fw-bold">Preferências do Sistema</h6>
         </div>
         <div class="card-body">
-          <form>
+          <form id="formInterface">
             <div class="row mb-3">
               <label class="col-sm-4 col-form-label">Idioma</label>
               <div class="col-sm-8">
@@ -75,7 +75,7 @@
           <h6 class="mb-0 fw-bold">Preferências de Mapa</h6>
         </div>
         <div class="card-body">
-          <form>
+          <form id="formMap">
             <div class="mb-3">
               <label class="form-label">Tipo de Mapa Padrão</label>
               <div class="d-flex gap-3">
@@ -87,10 +87,10 @@
                   <input class="form-check-input" type="radio" name="mapType" id="mapSatellite">
                   <label class="form-check-label" for="mapSatellite">Satélite</label>
                 </div>
-                <div class="form-check">
+                <!-- <div class="form-check">
                   <input class="form-check-input" type="radio" name="mapType" id="mapHybrid">
                   <label class="form-check-label" for="mapHybrid">Híbrido</label>
-                </div>
+                </div> -->
               </div>
             </div>
 
@@ -102,7 +102,7 @@
             </div>
 
             <div class="d-flex justify-content-end">
-              <button type="button" class="btn btn-outline-primary">Restaurar Padrões</button>
+              <button type="button" class="btn btn-outline-primary" id="btnRestoreMapPrefs">Restaurar Padrões</button>
             </div>
           </form>
         </div>

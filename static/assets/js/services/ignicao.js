@@ -41,7 +41,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 `;
             }
         } else {
-             alert("Atenção: Você precisa configurar um PIN de segurança na área lateral.");
+         document.getElementById("status-ignicao-text").textContent = "Sem PIN definido";
+         document.getElementById("status-ignicao-text").classList.remove("text-success", "text-danger");
+         document.getElementById("status-ignicao-text").classList.add("text-warning");
+         
+         Swal.fire({
+            icon: 'warning',
+            title: 'Atenção',
+            text: 'Você precisa configurar um PIN de segurança na área lateral.'
+         });
+         return;
         }
 
         loadVeiculos();
@@ -131,7 +140,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Comandos
   async function enviarComando(acao, pin, btnElement) {
      if (!veiculoId || !clienteId) {
-         alert("Sistema ainda carregando as informações do veículo. Aguarde um momento.");
+         Swal.fire({
+            icon: 'info',
+            title: 'Aguarde',
+            text: 'Sistema ainda carregando as informações do veículo. Aguarde um momento.'
+         });
          return;
      }
 
@@ -155,7 +168,11 @@ document.addEventListener("DOMContentLoaded", async () => {
        const data = await resp.json();
        
        if (resp.ok) {
-         alert(data.message);
+         Swal.fire({
+            icon: 'success',
+            title: 'Sucesso',
+            text: data.message
+         });
          // Fechar modal
          const modalId = acao === "cortar" ? "#modalCortar" : "#modalReativar";
          const modalEl = document.querySelector(modalId);
@@ -175,11 +192,19 @@ document.addEventListener("DOMContentLoaded", async () => {
          if(pinInput) pinInput.value = "";
          
        } else {
-         alert("Erro: " + (data.error || "Falha desconhecida"));
+         Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: data.error || "Falha desconhecida"
+         });
        }
      } catch (error) {
        console.error(error);
-       alert("Erro de conexão ao enviar comando.");
+       Swal.fire({
+          icon: 'error',
+          title: 'Erro',
+          text: 'Erro de conexão ao enviar comando.'
+       });
      } finally {
          if (btnElement) {
              btnElement.disabled = false;
@@ -192,7 +217,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if(btnCorte) {
       btnCorte.addEventListener("click", () => {
         const pin = document.getElementById("pin-cortar").value;
-        if (!pin) return alert("Digite o PIN");
+        if (!pin) return Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Digite o PIN' });
         enviarComando("cortar", pin, btnCorte);
       });
   }
@@ -201,7 +226,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if(btnReativar) {
       btnReativar.addEventListener("click", () => {
         const pin = document.getElementById("pin-reativar").value;
-        if (!pin) return alert("Digite o PIN");
+        if (!pin) return Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Digite o PIN' });
         enviarComando("reativar", pin, btnReativar);
       });
   }
@@ -211,7 +236,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if(btnSalvarPin) {
       btnSalvarPin.addEventListener("click", async () => {
           const newPin = document.getElementById("input-config-pin").value;
-          if (!newPin || newPin.length < 4) return alert("PIN deve ter pelo menos 4 dígitos");
+          if (!newPin || newPin.length < 4) return Swal.fire({ icon: 'warning', title: 'Atenção', text: 'PIN deve ter pelo menos 4 dígitos' });
           
           try {
               const resp = await fetch(`/clientes/${clienteId}`, {
@@ -221,14 +246,14 @@ document.addEventListener("DOMContentLoaded", async () => {
               });
               
               if (resp.ok) {
-                  alert("PIN salvo com sucesso!");
+                  Swal.fire({ icon: 'success', title: 'Sucesso', text: 'PIN salvo com sucesso!' });
                   document.getElementById("input-config-pin").value = "";
               } else {
-                  alert("Erro ao salvar PIN");
+                  Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao salvar PIN' });
               }
           } catch (e) {
               console.error(e);
-              alert("Erro ao salvar PIN");
+              Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro ao salvar PIN' });
           }
       });
   }

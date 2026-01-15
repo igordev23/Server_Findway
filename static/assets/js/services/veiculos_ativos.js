@@ -236,7 +236,11 @@ class VeiculosAtivosUI {
         this.elements.mapaContainer.scrollIntoView({ behavior: 'smooth' });
     } else {
         // Feedback visual caso não tenha localização
-        alert("Localização deste veículo não disponível no mapa.");
+        Swal.fire({
+          icon: 'info',
+          title: 'Informação',
+          text: 'Localização deste veículo não disponível no mapa.'
+        });
     }
   }
 
@@ -252,10 +256,27 @@ class VeiculosAtivosUI {
     // Inicializa o mapa apenas uma vez
     if (!this.map) {
         this.elements.mapaContainer.innerHTML = "";
+        let mapType = "roadmap";
+        let showTraffic = true;
+        if (window.FWPreferences && typeof window.FWPreferences.getMapPreferences === "function") {
+            const prefs = window.FWPreferences.getMapPreferences();
+            if (prefs && prefs.mapType) {
+                mapType = prefs.mapType;
+            }
+            if (typeof prefs.showTraffic === "boolean") {
+                showTraffic = prefs.showTraffic;
+            }
+        }
+
         this.map = new google.maps.Map(this.elements.mapaContainer, {
-            center: { lat: -23.5505, lng: -46.6333 }, // Centro SP
+            center: { lat: -23.5505, lng: -46.6333 },
             zoom: 10,
+            mapTypeId: mapType,
         });
+        if (showTraffic && google.maps && typeof google.maps.TrafficLayer === "function") {
+            const trafficLayer = new google.maps.TrafficLayer();
+            trafficLayer.setMap(this.map);
+        }
         this.markers = [];
     }
 
