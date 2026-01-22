@@ -3,6 +3,7 @@ from models.localizacao import Localizacao
 from middlewares import check_subscription_status
 from models.veiculo import Veiculo
 from models.cliente import Cliente
+from models.evento import Evento
 from database import db
 from datetime import datetime, timedelta
 from sqlalchemy import func
@@ -97,6 +98,7 @@ def criar_localizacao():
     latitude = data.get("latitude")
     longitude = data.get("longitude")
     timestamp_str = data.get("timestamp") # Pode vir string ou datetime
+    led_color = data.get("led") # "verde", "green", "vermelho", "red"
 
     # Verifica se o veículo existe
     veiculo = Veiculo.query.filter_by(placa=placa).first()
@@ -112,9 +114,9 @@ def criar_localizacao():
     else:
         timestamp = datetime.now(br_tz)
         
-    # Processar Eventos (Movimento/Parada) ANTES de salvar a nova localização
+    # Processar Eventos (Movimento/Parada/Ignição) ANTES de salvar a nova localização
     # para comparar com a anterior corretamente
-    process_vehicle_events(veiculo, latitude, longitude, timestamp)
+    process_vehicle_events(veiculo, latitude, longitude, timestamp, led_color)
 
     # Atualiza timestamp do veículo para ficar online
     veiculo.ultima_atualizacao = datetime.now(br_tz)
@@ -305,6 +307,29 @@ def info_completa(placa):
             status = "Online" if delta.total_seconds() <= 9 else "Offline"
         else:
             status = "Offline"
+
+    # Offline por falta de atualizações: cria apenas UM evento de conexão perdida após 10 min
+    try:
+        if status == "Offline":
+            if veiculo.ultima_atualizacao:
+                gap = (agora - veiculo.ultima_atualizacao).total_seconds()
+                # Após 10 minutos sem atualização, registra perda de conexão (uma única vez)
+                CONNECTION_LOSS_TIMEOUT_SECS = 600
+                if gap >= CONNECTION_LOSS_TIMEOUT_SECS:
+                    last_event2 = Evento.query.filter_by(veiculo_id=veiculo.id).order_by(Evento.timestamp.desc()).first()
+                    if not last_event2 or last_event2.tipo != "CONEXAO":
+                        perda = Evento(
+                            veiculo_id=veiculo.id,
+                            cliente_id=veiculo.cliente_id,
+                            tipo="CONEXAO",
+                            descricao="Perda de conexão (10+ min sem atualizações)",
+                            timestamp=agora,
+                            lido=False
+                        )
+                        db.session.add(perda)
+                        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
     return jsonify({
         "placa": veiculo.placa,

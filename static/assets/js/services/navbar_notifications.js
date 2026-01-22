@@ -96,30 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           let allNotifs = [];
 
-          // 2. Check Offline Status
-          if (Array.isArray(veiculos)) {
-              for (const v of veiculos) {
-                  try {
-                      const statusData = await fetch(`/localizacao/status/${v.placa}`).then(r => r.json());
-                      if (statusData.status_gps === "Offline") {
-                          const rawTs = statusData.timestamp;
-                          if (!isOfflineRead(v.placa, rawTs)) {
-                              const dt = new Date(statusData.timestamp);
-                              if (!isNaN(dt.getTime())) {
-                                  allNotifs.push({
-                                      id: `offline_${v.placa}`,
-                                      tipo: 'offline',
-                                      descricao: `Veículo ${v.placa} perdeu conexão.`,
-                                      timestamp: dt,
-                                      lido: false,
-                                      rawTimestamp: rawTs
-                                  });
-                              }
-                          }
-                      }
-                  } catch (e) {}
-              }
-          }
+          // 2. Skip client-side offline generation; rely on backend events only
 
           // 3. Fetch Server Events
           try {
