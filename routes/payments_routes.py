@@ -318,8 +318,36 @@ def get_my_latest_session():
                  print(f"[DEBUG] Pagamento confirmado! Registrando pagamento para {cliente.email}...")
                  # Chama o método completo que atualiza status E datas
                  cliente.registrar_pagamento()
+
+                
+                 try:
+                     from datetime import timedelta
+                     limite_tempo = datetime.now(br_tz) - timedelta(minutes=5)
+                     
+                     duplicado = Evento.query.filter(
+                         Evento.cliente_id == cliente.id,
+                         Evento.tipo == "PAGAMENTO",
+                         Evento.timestamp >= limite_tempo
+                     ).first()
+                     
+                     if not duplicado:
+                         amount = session.amount_total / 100.0 if session.amount_total else 0.0
+                         notif = Evento(
+                             cliente_id=cliente.id,
+                             veiculo_id=None,
+                             tipo="PAGAMENTO",
+                             descricao=f"Pagamento de R$ {amount:.2f} efetuado com sucesso.",
+                             lido=False,
+                             timestamp=datetime.now(br_tz)
+                         )
+                         db.session.add(notif)
+                         print(f"[DEBUG] Evento PAGAMENTO criado manualmente via polling para {cliente.email}")
+                 except Exception as e_ev:
+                     print(f"[DEBUG] Erro ao criar evento no polling: {e_ev}")
+                 
+
                  db.session.commit()
-        # --- END AUTO-UPDATE ---
+      
 
         return jsonify({
             "id": session.id,
