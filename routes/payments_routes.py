@@ -5,6 +5,11 @@ from flask import Blueprint, request, jsonify, current_app
 from database import db
 from models.cliente import Cliente
 from models.administrador import Administrador
+from models.evento import Evento
+from datetime import datetime
+import pytz
+
+br_tz = pytz.timezone("America/Sao_Paulo")
 from middlewares import require_admin, _get_email_from_auth_header
 
 payments_bp = Blueprint("payments_bp", __name__)
@@ -325,3 +330,65 @@ def get_my_latest_session():
     except Exception as e:
         print(f"Erro ao buscar sessões: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@payments_bp.route("/webhook", methods=["POST"])
+def webhook_received():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get("Stripe-Signature")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, webhook_secret
+        )
+    except ValueError as e:
+        print(f"Webhook Error: Invalid payload")
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError as e:
+        print(f"Webhook Error: Invalid signature")
+        return "Invalid signature", 400
+
+    event_type = event["type"]
+    data_object = event["data"]["object"]
+    
+    print(f"Webhook recebido: {event_type}")
+
+    # Handle events
+    if event_type == "invoice.payment_succeeded":
+        customer_id = data_object.get("customer")
+        if customer_id:
+            cliente = Cliente.query.filter_by(stripe_customer_id=customer_id).first()
+            if cliente:
+                amount = data_object.get('amount_paid', 0) / 100.0
+                notif = Evento(
+                    cliente_id=cliente.id,
+                    veiculo_id=None,
+                    tipo="PAGAMENTO",
+                    descricao=f"Pagamento de R$ {amount:.2f} efetuado com sucesso.",
+                    lido=False,
+                    timestamp=datetime.now(br_tz)
+                )
+                db.session.add(notif)
+                db.session.commit()
+                print(f"Evento PAGAMENTO criado para {cliente.email}")
+
+    elif event_type == "invoice.payment_failed":
+        customer_id = data_object.get("customer")
+        if customer_id:
+            cliente = Cliente.query.filter_by(stripe_customer_id=customer_id).first()
+            if cliente:
+                notif = Evento(
+                    cliente_id=cliente.id,
+                    veiculo_id=None,
+                    tipo="ATRASO",
+                    descricao="Pagamento em atraso. Verifique seu método de pagamento.",
+                    lido=False,
+                    timestamp=datetime.now(br_tz)
+                )
+                db.session.add(notif)
+                db.session.commit()
+                print(f"Evento ATRASO criado para {cliente.email}")
+
+    return jsonify({"status": "success"}), 200
+

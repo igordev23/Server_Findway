@@ -25,6 +25,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentFilter = 'all';
   let allNotifications = []; // Store fetched notifications for filtering
+  function mapTipoToGrupo(tipo) {
+    const t = String(tipo || '').toUpperCase();
+    if (t === 'MOVIMENTO') return 'MOVIMENTO';
+    if (t === 'PARADA') return 'PARADA';
+    if (t === 'ALERTA') return 'ALERTA';
+    if (t === 'PAGAMENTO' || t === 'ATRASO') return 'FINANCEIRO';
+    if (t === 'CADASTRO') return 'CADASTRO';
+    if (t === 'VEICULO_LIGADO' || t === 'LIGADO' || t === 'VEICULO_DESLIGADO' || t === 'DESLIGADO') return 'IGNICAO';
+    if (t === 'CONEXAO' || t === 'CONEXAO_PERDIDA' || t === 'OFFLINE') return 'CONEXAO';
+    return 'outros';
+  }
 
   // Filter Button Logic
   const filterButtons = document.querySelectorAll('#notification-filters button');
@@ -60,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // For now, let's assume offline logic is just visual and transient.
 
     return `
-      <div class="list-group-item d-flex align-items-start gap-3 ${bgClass} position-relative" id="notif-${id}">
+      <div class="list-group-item d-flex align-items-start gap-3 ${bgClass} position-relative" id="notif-${id}" onclick="handleNotificationClick('${id}')">
         ${dotHtml}
         <div class="rounded-circle p-2 bg-${badgeColor} bg-opacity-10 text-${badgeColor}">
             <i class="${iconClass} fs-5"></i>
@@ -97,6 +108,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
   }
 
+  window.handleNotificationClick = async function(id) {
+      if (!id) return;
+      await window.markAsRead(id);
+  }
+
   function renderNotifications() {
       if (allNotifications.length === 0) {
         listaContainer.innerHTML = '<div class="p-5 text-center text-muted"><i class="bi bi-bell-slash fs-1 mb-3 d-block"></i>Nenhuma notificação encontrada.</div>';
@@ -108,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (currentFilter === 'unread') {
               filtered = allNotifications.filter(n => !n.lido);
           } else {
-              filtered = allNotifications.filter(n => n.tipo === currentFilter || (currentFilter === 'offline' && n.tipo === 'offline'));
+              filtered = allNotifications.filter(n => mapTipoToGrupo(n.tipo) === currentFilter);
           }
       }
 
@@ -154,37 +170,25 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Erro ao buscar veículos", e);
       }
 
-      if (!Array.isArray(veiculos) || veiculos.length === 0) {
-        listaContainer.innerHTML = '<div class="p-3 text-center text-muted">Nenhum veículo encontrado para monitorar.</div>';
-        return;
+      if (!Array.isArray(veiculos)) {
+        veiculos = [];
       }
 
       let tempNotifications = [];
 
       // 3. Check Status for each vehicle (Offline logic)
-      for (const v of veiculos) {
-        try {
-          const statusData = await fetch(`/localizacao/status/${v.placa}`).then(r => r.json());
-          
-          if (statusData.status_gps === "Offline") {
-            const timeStr = formatTime(statusData.timestamp);
-            const timeAgoStr = timeAgo(statusData.timestamp);
-            
-            tempNotifications.push({
-                id: 'offline', // Virtual ID
-                tipo: 'offline',
-                title: "Perda de conexão",
-                timeAgo: timeAgoStr,
-                message: `O rastreador ficou offline por mais de 10 segundos. Última posição registrada às ${timeStr}.`,
-                color: "warning",
-                icon: "bi bi-wifi-off",
-                lido: false, // Always unread for now since it's transient
-                timestamp: new Date(statusData.timestamp) // For sorting if needed
-            });
+      if (veiculos.length > 0) {
+          for (const v of veiculos) {
+            try {
+              const statusData = await fetch(`/localizacao/status/${v.placa}`).then(r => r.json());
+              
+              if (statusData.status_gps === "Offline") {
+                // Persisted backend events will handle connection loss notifications
+              }
+            } catch (err) {
+              console.error(`Erro ao verificar status da placa ${v.placa}`, err);
+            }
           }
-        } catch (err) {
-          console.error(`Erro ao verificar status da placa ${v.placa}`, err);
-        }
       }
 
       // 4. Fetch Backend Events
@@ -196,23 +200,49 @@ document.addEventListener("DOMContentLoaded", () => {
              let icon = "bi-info-circle";
              let color = "primary";
              let title = e.tipo || "Evento";
+             const tipoNorm = String(e.tipo || "").toUpperCase();
              
-             if (e.tipo === "ALERTA") { 
+             if (tipoNorm === "ALERTA") { 
                icon = "bi-exclamation-triangle"; 
                color = "warning"; 
-             } else if (e.tipo === "MOVIMENTO") {
+             } else if (tipoNorm === "MOVIMENTO") {
                icon = "bi-exclamation-octagon";
                color = "danger";
                title = "Movimento detectado";
-             } else if (e.tipo === "PARADA") {
+             } else if (tipoNorm === "PARADA") {
                icon = "bi-stop-circle";
                color = "secondary";
                title = "Veículo parado";
+             } else if (tipoNorm === "PAGAMENTO") {
+               icon = "bi-check-circle-fill";
+               color = "success";
+               title = "Pagamento Efetuado";
+             } else if (tipoNorm === "ATRASO") {
+               icon = "bi-clock-history";
+               color = "danger";
+               title = "Pagamento em Atraso";
+             } else if (tipoNorm === "CADASTRO") {
+               icon = "bi-car-front-fill";
+               color = "info";
+               title = "Novo Veículo";
+             } else if (tipoNorm === "VEICULO_LIGADO" || tipoNorm === "LIGADO") {
+               icon = "bi-key-fill";
+               color = "success";
+               title = "Veículo Ligado";
+             } else if (tipoNorm === "VEICULO_DESLIGADO" || tipoNorm === "DESLIGADO") {
+               icon = "bi-key";
+               color = "secondary";
+               title = "Veículo Desligado";
+             } else if (tipoNorm === "CONEXAO" || tipoNorm === "CONEXAO_PERDIDA") {
+               icon = "bi-wifi-off";
+               color = "warning";
+               title = "Perda de conexão";
              }
              
              tempNotifications.push({
                  id: e.id,
                  tipo: e.tipo,
+                 grupo: mapTipoToGrupo(e.tipo),
                  title: title,
                  timeAgo: timeAgoStr,
                  message: e.descricao,
@@ -227,12 +257,15 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Sem eventos históricos ou erro API");
       }
       
-      // Sort by timestamp desc (already mostly sorted but good to ensure mixed types are sorted)
-      // Note: offline events rely on last location timestamp, events on event timestamp
-      // Assuming 'timestamp' property is Date object
-      // tempNotifications.sort((a, b) => b.timestamp - a.timestamp); // Optional
+      tempNotifications.sort((a, b) => b.timestamp - a.timestamp);
 
       allNotifications = tempNotifications;
+      // Hide ALERTA filter if no items of this group
+      const alertaBtn = document.querySelector('#notification-filters button[data-filter="ALERTA"]');
+      if (alertaBtn) {
+          const hasAlerta = allNotifications.some(n => mapTipoToGrupo(n.tipo) === 'ALERTA');
+          alertaBtn.classList.toggle('d-none', !hasAlerta);
+      }
       renderNotifications();
 
     } catch (error) {
@@ -246,6 +279,20 @@ document.addEventListener("DOMContentLoaded", () => {
     firebase.auth().onAuthStateChanged((user) => {
       if (user && user.email) {
         loadNotifications(user.email);
+        const btnAll = document.getElementById("btnMarkAllRead");
+        if (btnAll) {
+            btnAll.addEventListener("click", async () => {
+                try {
+                    if (currentUserId) {
+                        await fetch(`/eventos/cliente/${currentUserId}/ler-todos`, { method: 'POST' });
+                        allNotifications = allNotifications.map(n => ({ ...n, lido: true }));
+                        renderNotifications();
+                    }
+                } catch (e) {
+                    console.error("Erro ao marcar todas como lidas", e);
+                }
+            });
+        }
       } else {
         listaContainer.innerHTML = '<div class="p-3 text-center text-muted">Faça login para ver as notificações.</div>';
       }

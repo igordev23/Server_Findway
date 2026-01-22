@@ -38,9 +38,7 @@ def marcar_evento_lido(evento_id):
 @evento_bp.route("/eventos/admin/<int:admin_id>", methods=["GET"])
 def listar_eventos_admin(admin_id):
     eventos = db.session.query(Evento).join(
-        Veiculo, Evento.veiculo_id == Veiculo.id
-    ).join(
-        Cliente, Veiculo.cliente_id == Cliente.id
+        Cliente, Evento.cliente_id == Cliente.id
     ).filter(
         Cliente.administrador_id == admin_id
     ).order_by(Evento.timestamp.desc()).all()
@@ -58,8 +56,16 @@ def listar_eventos_admin(admin_id):
 def criar_evento():
     data = request.json
     try:
+        veiculo_id = data.get("veiculo_id")
+        cliente_id = None
+        if veiculo_id:
+            veiculo = Veiculo.query.get(veiculo_id)
+            if veiculo:
+                cliente_id = veiculo.cliente_id
+        
         evento = Evento(
-            veiculo_id=data["veiculo_id"],
+            veiculo_id=veiculo_id,
+            cliente_id=cliente_id,
             tipo=data["tipo"],
             descricao=data["descricao"],
             timestamp=datetime.now(br_tz)
@@ -74,12 +80,10 @@ def criar_evento():
 @evento_bp.route("/eventos/cliente/<int:cliente_id>/ler-todos", methods=["POST"])
 def marcar_todos_eventos_lido_cliente(cliente_id):
     try:
-        # Busca todos os eventos não lidos dos veículos deste cliente
-        eventos_nao_lidos = db.session.query(Evento).join(
-            Veiculo, Evento.veiculo_id == Veiculo.id
-        ).filter(
-            Veiculo.cliente_id == cliente_id,
-            Evento.lido == False
+        # Busca todos os eventos não lidos deste cliente
+        eventos_nao_lidos = Evento.query.filter_by(
+            cliente_id=cliente_id,
+            lido=False
         ).all()
         
         if not eventos_nao_lidos:
@@ -96,11 +100,7 @@ def marcar_todos_eventos_lido_cliente(cliente_id):
 
 @evento_bp.route("/eventos/cliente/<int:cliente_id>", methods=["GET"])
 def listar_eventos_cliente(cliente_id):
-    eventos = db.session.query(Evento).join(
-        Veiculo, Evento.veiculo_id == Veiculo.id
-    ).filter(
-        Veiculo.cliente_id == cliente_id
-    ).order_by(Evento.timestamp.desc()).all()
+    eventos = Evento.query.filter_by(cliente_id=cliente_id).order_by(Evento.timestamp.desc()).all()
     
     return jsonify([{
         "id": e.id,
@@ -110,3 +110,13 @@ def listar_eventos_cliente(cliente_id):
         "timestamp": e.timestamp.isoformat(),
         "lido": getattr(e, "lido", False)
     } for e in eventos])
+
+@evento_bp.route("/eventos/cliente/<int:cliente_id>/limpar", methods=["DELETE"])
+def limpar_eventos_cliente(cliente_id):
+    try:
+        Evento.query.filter_by(cliente_id=cliente_id).delete()
+        db.session.commit()
+        return jsonify({"message": "Notificações removidas para o cliente", "cliente_id": cliente_id}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400

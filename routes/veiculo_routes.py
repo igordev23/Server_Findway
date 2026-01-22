@@ -198,6 +198,19 @@ def criar_veiculo():
         )
         db.session.add(v)
         db.session.commit()
+
+        # Notificação de cadastro
+        ev = evento.Evento(
+            cliente_id=v.cliente_id,
+            veiculo_id=v.id,
+            tipo="CADASTRO",
+            descricao=f"Novo veículo cadastrado: {v.placa}",
+            lido=False,
+            timestamp=datetime.now(br_tz)
+        )
+        db.session.add(ev)
+        db.session.commit()
+
         return jsonify({"message": "Veículo criado", "id": v.id}), 201
     except Exception as e:
         db.session.rollback()

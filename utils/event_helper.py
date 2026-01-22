@@ -23,19 +23,66 @@ def haversine(lat1, lon1, lat2, lon2):
     r = 6371 # Radius of earth in kilometers. Use 3956 for miles
     return c * r * 1000 # returns in meters
 
-def process_vehicle_events(veiculo, new_lat, new_lng, new_timestamp):
+def process_vehicle_events(veiculo, new_lat, new_lng, new_timestamp, led_color=None):
     """
     Analyzes the new location against history to generate events:
-    - MOVIMENTO
-    - PARADA
+    - Movimento
+    - Parada
+    - Ligado
+    - Desligado
     """
     try:
         # Get last location
         last_loc = Localizacao.query.filter_by(placa=veiculo.placa)\
             .order_by(Localizacao.timestamp.desc()).first()
 
+        led_event_created = False
+        # Handle explicit LED/Ignition Status if provided
+        if led_color:
+            led_normalized = led_color.lower().strip()
+            if led_normalized == "verde" or led_normalized == "green":
+                novo_evento = Evento(
+                    veiculo_id=veiculo.id,
+                    cliente_id=veiculo.cliente_id,
+                    tipo="Ligado",
+                    descricao="Veículo ligado",
+                    timestamp=new_timestamp,
+                    lido=False
+                )
+                db.session.add(novo_evento)
+                led_event_created = True
+                veiculo.status_ignicao = True
+            elif led_normalized == "vermelho" or led_normalized == "red":
+                novo_evento = Evento(
+                    veiculo_id=veiculo.id,
+                    cliente_id=veiculo.cliente_id,
+                    tipo="Desligado",
+                    descricao="Veículo desligado",
+                    timestamp=new_timestamp,
+                    lido=False
+                )
+                db.session.add(novo_evento)
+                led_event_created = True
+
+        # Evaluate last event type now for ordering decisions
+        last_event = Evento.query.filter_by(veiculo_id=veiculo.id)\
+            .order_by(Evento.timestamp.desc()).first()
+        last_event_type = last_event.tipo if last_event else "UNKNOWN"
+
         if not last_loc:
-            # First location ever, no event comparison possible yet
+            # Sem localização anterior: ainda assim emitimos "Movimento" logo após "Ligado"
+            if led_event_created and last_event_type != "Movimento":
+                move_ts = new_timestamp + timedelta(seconds=1)
+                novo_evento = Evento(
+                    veiculo_id=veiculo.id,
+                    cliente_id=veiculo.cliente_id,
+                    tipo="Movimento",
+                    descricao="Veículo entrou em movimento",
+                    timestamp=move_ts,
+                    lido=False
+                )
+                db.session.add(novo_evento)
+                veiculo.status_ignicao = True
             return
 
         # Ensure timestamps are comparable (offset-aware)
@@ -63,40 +110,45 @@ def process_vehicle_events(veiculo, new_lat, new_lng, new_timestamp):
         # Define Thresholds
         MOVEMENT_THRESHOLD_KMH = 5.0  # Speed to consider "moving"
         STOP_THRESHOLD_KMH = 2.0      # Speed to consider "stopped"
+        START_MOVE_MIN_DIST_M = 15.0  # Fallback: distance change to mark start of movement
         
         # Determine Current State
         is_moving = speed_kmh > MOVEMENT_THRESHOLD_KMH
         is_stopped = speed_kmh < STOP_THRESHOLD_KMH
 
-        # Get Last Event to avoid duplicates
+        # Get Last Event to avoid duplicates (already fetched above, but keep for clarity)
         last_event = Evento.query.filter_by(veiculo_id=veiculo.id)\
             .order_by(Evento.timestamp.desc()).first()
-        
         last_event_type = last_event.tipo if last_event else "UNKNOWN"
 
-        # Generate "MOVIMENTO" Event
-        if is_moving and last_event_type != "MOVIMENTO":
+        # Generate "Movimento" Event (speed or fallback by distance)
+        if (is_moving or (dist_meters >= START_MOVE_MIN_DIST_M and time_diff_seconds > 0)) and last_event_type != "Movimento":
             # If we were previously stopped (or unknown), and now moving
+            move_ts = new_timestamp + timedelta(seconds=1) if led_event_created else new_timestamp
             novo_evento = Evento(
                 veiculo_id=veiculo.id,
-                tipo="MOVIMENTO",
-                descricao=f"Veículo entrou em movimento (Vel. aprox: {int(speed_kmh)} km/h)",
-                timestamp=new_timestamp
+                cliente_id=veiculo.cliente_id,
+                tipo="Movimento",
+                descricao=f"Veículo entrou em movimento",
+                timestamp=move_ts,
+                lido=False
             )
             db.session.add(novo_evento)
             # Update vehicle status (optional, but good for UI)
             veiculo.status_ignicao = True 
 
-        # Generate "PARADA" Event
-        elif is_stopped and last_event_type != "PARADA":
+        # Generate "Parada" Event
+        elif is_stopped and last_event_type != "Parada":
             # If we were moving, and now stopped
             # We only confirm stop if we really are slow
-            if last_event_type == "MOVIMENTO" or last_event_type == "UNKNOWN":
+            if last_event_type == "Movimento" or last_event_type == "UNKNOWN":
                 novo_evento = Evento(
                     veiculo_id=veiculo.id,
-                    tipo="PARADA",
+                    cliente_id=veiculo.cliente_id,
+                    tipo="Parada",
                     descricao=f"Veículo parou (Vel. aprox: {int(speed_kmh)} km/h)",
-                    timestamp=new_timestamp
+                    timestamp=new_timestamp,
+                    lido=False
                 )
                 db.session.add(novo_evento)
                 veiculo.status_ignicao = False
@@ -111,10 +163,10 @@ def process_vehicle_events(veiculo, new_lat, new_lng, new_timestamp):
             # Heurística: Se passou muito tempo sem sinal e a distância é curta (< 50m),
             # assumimos que o veículo ficou PARADO/DESLIGADO nesse período.
             if dist_meters < 50:
-                if last_event_type != "PARADA":
+                if last_event_type != "Parada":
                      stop_event = Evento(
                         veiculo_id=veiculo.id,
-                        tipo="PARADA",
+                        tipo="Parada",
                         descricao=f"Veículo confirmado parado (retorno após {minutes_offline} min offline)",
                         timestamp=new_timestamp
                      )
@@ -124,7 +176,7 @@ def process_vehicle_events(veiculo, new_lat, new_lng, new_timestamp):
                 # Se deslocou muito enquanto estava offline
                 novo_evento = Evento(
                     veiculo_id=veiculo.id,
-                    tipo="ALERTA",
+                    tipo="Alerta",
                     descricao=f"Conexão restaurada após {minutes_offline} min offline",
                     timestamp=new_timestamp
                 )
